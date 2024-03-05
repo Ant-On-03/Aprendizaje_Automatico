@@ -574,11 +574,23 @@ function crossvalidation(targets::AbstractArray{Bool,1}, k::Int64)
     return indices
 end;
 
+
+## TODAVÍA NO FUNCIONA, ESTA ÚLTIMA NO VA CREO.s
 function crossvalidation(targets::AbstractArray{Bool,2}, k::Int64)
-    #
-    # Codigo a desarrollar
-    #
+
+
+    indices = Vector{Int64}(undef, size(targets,1))
+
+    for col in 1:size(targets,2)
+        
+        n_positives = sum(targets(:,col))
+        indices[findall(targets[:,col])] = crossvalidation(n_positives, k)
+        ptinrln(indices)
+    end
+
+    return indices
 end;
+
 
 function crossvalidation(targets::AbstractArray{<:Any,1}, k::Int64)
     #
