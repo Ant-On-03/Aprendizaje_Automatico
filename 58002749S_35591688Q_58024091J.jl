@@ -584,7 +584,7 @@ function crossvalidation(targets::AbstractArray{Bool,2}, k::Int64)
 
     for col in 1:size(targets,2)
         
-        n_positives = sum(targets(:,col))
+        n_positives = sum(targets[:,col])
         indices[findall(targets[:,col])] = crossvalidation(n_positives, k)
         ptinrln(indices)
     end
