@@ -559,15 +559,15 @@ using Random
 using Random:seed!
 
 function crossvalidation(N::Int64, k::Int64)
+    # devolver N elementos ordenados en k subconjuntos 
     ordenado = collect(1:k)
-    repetido = repeat(ordenado, ceil(Int64, N/k))[1:N]
-    println("Repetido", repetido)
-    
+    repetido = repeat(ordenado, ceil(Int64, N/k))[1:N]    
     return shuffle!(repetido) 
     
 end;
 
 function crossvalidation(targets::AbstractArray{Bool,1}, k::Int64)
+    # para un vector devolver un índice asignando a cada posición un elemento mediante muestreo estratificado.
     indices = Vector{Int64}(undef,length(targets))
     indices[findall(targets)] = crossvalidation(count(targets), k)
     indices[findall(!,targets)] = crossvalidation(count(!,targets), k)
@@ -576,19 +576,13 @@ function crossvalidation(targets::AbstractArray{Bool,1}, k::Int64)
 end;
 
 
-## TODAVÍA NO FUNCIONA, ESTA ÚLTIMA NO VA CREO.s
 function crossvalidation(targets::AbstractArray{Bool,2}, k::Int64)
-
-
     indices = Vector{Int64}(undef, size(targets,1))
 
     for col in 1:size(targets,2)
-        
         n_positives = sum(targets[:,col])
         indices[findall(targets[:,col])] = crossvalidation(n_positives, k)
-        ptinrln(indices)
     end
-
     return indices
 end;
 
