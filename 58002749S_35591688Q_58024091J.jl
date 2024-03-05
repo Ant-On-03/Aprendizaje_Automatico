@@ -276,7 +276,8 @@ end;
 
 function holdOut(N::Int, Pval::Real, Ptest::Real)
    indices, test = holdOut(N, Ptest)
-   train, val = holdOut(length(indices), Pval)
+   Pval = Pval * length(indices) / N
+   val, train = holdOut(length(indices), Pval)
 
    train = indices[1:length(train)]
    val = indices[length(train)+1:end]
