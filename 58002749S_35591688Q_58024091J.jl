@@ -1,5 +1,7 @@
 # ----------------------------------------------------------------------------------------------
 # ------------------------------------- Practica 2 ---------------------------------------------
+# --------------------------OneHotEncoding, Normalización de Parámetros-------------------------
+# -----------------------------------------Entrenamiento----------------------------------------
 # ----------------------------------------------------------------------------------------------
 
 using Statistics
@@ -581,21 +583,35 @@ function crossvalidation(targets::AbstractArray{Bool,2}, k::Int64)
 
     for col in 1:size(targets,2)
         n_positives = sum(targets[:,col])
+        # coloca en aquellas posiciones de indices correspondientes a positivos en la columna, asignaciones a un subgrupo de forma estratificada.
         indices[findall(targets[:,col])] = crossvalidation(n_positives, k)
     end
     return indices
 end;
 
 
-function crossvalidation(targets::AbstractArray{<:Any,1}, k::Int64)
-    #
-    # Codigo a desarrollar
-    #
+function crossvalidation(targets::AbstractArray{<:Any,1}, k::Int64)    
+
+    # Ambas soluciones funcionan. Quizás la segunda sea más rápida.
+
+    #Sol1.
+    #return crossvalidation(oneHotEncoding(targets), k)
+
+    #Sol2.
+    # without onehotencoding (reto Profe):
+    indice = Vector{Int64}(undef, length(targets))
+    for class in unique(targets)
+
+        println(class)
+        n_class = length(findall(x -> x==class, targets))
+        println(n_class)
+        indice[findall(x -> x==class, targets)] = crossvalidation(n_class, k)
+        
+
+
+    end
+    return indice
 end;
-
-
-
-
 
 
 
