@@ -561,17 +561,23 @@ using Random
 using Random:seed!
 
 function crossvalidation(N::Int64, k::Int64)
+    # muestreo de forma estratificada en k subconjuntos.
     # devolver N elementos ordenados en k subconjuntos 
     ordenado = collect(1:k)
+    # obtener un vector de longitud N que repita 1,2,3,...k, 1,2,3,...k hasta la longitud N
     repetido = repeat(ordenado, ceil(Int64, N/k))[1:N]    
+    # devolverlo desordenado
     return shuffle!(repetido) 
     
 end;
 
 function crossvalidation(targets::AbstractArray{Bool,1}, k::Int64)
+    # muestreo de forma estratificada en k subconjuntos.
     # para un vector devolver un índice asignando a cada posición un elemento mediante muestreo estratificado.
     indices = Vector{Int64}(undef,length(targets))
+    # asignar en el índice a los elementos positivos, sus respectivos subconjuntos
     indices[findall(targets)] = crossvalidation(count(targets), k)
+    # asignar por separado en el índice de elementos negativos, sus respectivos subconjuntos
     indices[findall(!,targets)] = crossvalidation(count(!,targets), k)
 
     return indices
@@ -579,13 +585,15 @@ end;
 
 
 function crossvalidation(targets::AbstractArray{Bool,2}, k::Int64)
+    # muestreo de forma estratificada en k subconjuntos.
     indices = Vector{Int64}(undef, size(targets,1))
-
+    # por cada columna (atributo) de targets
     for col in 1:size(targets,2)
         n_positives = sum(targets[:,col])
-        # coloca en aquellas posiciones de indices correspondientes a positivos en la columna, asignaciones a un subgrupo de forma estratificada.
+        # coloca en índice a los elementos positivos, sus respectivos subconjuntos.
         indices[findall(targets[:,col])] = crossvalidation(n_positives, k)
     end
+    # repite esto por cada columna de manera que todos los elementos quedan con un subconjunto asociado
     return indices
 end;
 
@@ -597,6 +605,7 @@ function crossvalidation(targets::AbstractArray{<:Any,1}, k::Int64)
     #Sol1.
     #return crossvalidation(oneHotEncoding(targets), k)
 
+
     #Sol2.
     # without onehotencoding (reto Profe):
     indice = Vector{Int64}(undef, length(targets))
@@ -606,9 +615,6 @@ function crossvalidation(targets::AbstractArray{<:Any,1}, k::Int64)
         n_class = length(findall(x -> x==class, targets))
         println(n_class)
         indice[findall(x -> x==class, targets)] = crossvalidation(n_class, k)
-        
-
-
     end
     return indice
 end;
@@ -621,6 +627,7 @@ function ANNCrossValidation(topology::AbstractArray{<:Int,1},
     numExecutions::Int=50,
     transferFunctions::AbstractArray{<:Function,1}=fill(σ, length(topology)),
     maxEpochs::Int=1000, minLoss::Real=0.0, learningRate::Real=0.01, validationRatio::Real=0, maxEpochsVal::Int=20, showText::Bool=false)
+    
     #
     # Codigo a desarrollar
     #
