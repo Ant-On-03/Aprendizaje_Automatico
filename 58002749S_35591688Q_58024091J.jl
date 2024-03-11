@@ -440,12 +440,12 @@ function confusionMatrix(outputs::AbstractArray{Bool,2}, targets::AbstractArray{
 
         # Iterar sobre las muestras
         for i in 1:size(outputs, 1)
-        # Obtener la clase predicha y la clase real para esta muestra
-        predicted_class = argmax(outputs[i, :])
-        actual_class = argmax(targets[i, :])
-        
-        # Incrementar el recuento en la matriz de confusión
-        conf_mat[actual_class, predicted_class] += 1
+            # Obtener la clase predicha y la clase real para esta muestra
+            predicted_class = argmax(outputs[i, :])
+            actual_class = argmax(targets[i, :])
+            
+            # Incrementar el recuento en la matriz de confusión
+            conf_mat[actual_class, predicted_class] += 1
         end
     
     
