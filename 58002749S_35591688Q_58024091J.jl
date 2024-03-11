@@ -476,12 +476,12 @@ function confusionMatrix(outputs::AbstractArray{Bool,2}, targets::AbstractArray{
     end
 
     
-
 function confusionMatrix(outputs::AbstractArray{<:Real,2}, targets::AbstractArray{Bool,2}; weighted::Bool=true)
     outputs_bool = classifyOutputs(outputs)
 
     return confusionMatrix(outputs_bool, targets; weighted)
 end;
+
 
 function confusionMatrix(outputs::AbstractArray{<:Any,1}, targets::AbstractArray{<:Any,1}; weighted::Bool=true)
     # Verificar que los vectores tengan la misma longitud
@@ -625,13 +625,20 @@ end;
 
 using ScikitLearn: @sk_import, fit!, predict
 
-#@sk_import svm: SVC
-#@sk_import tree: DecisionTreeClassifier
-#@sk_import neighbors: KNeighborsClassifier
+@sk_import svm: SVC
+@sk_import tree: DecisionTreeClassifier
+@sk_import neighbors: KNeighborsClassifier
 
 
 function modelCrossValidation(modelType::Symbol, modelHyperparameters::Dict, inputs::AbstractArray{<:Real,2}, targets::AbstractArray{<:Any,1}, crossValidationIndices::Array{Int64,1})
-    #
-    # Codigo a desarrollar
-    #
+    if modelType == SVC
+        model = SVC(kernel="rbf", degree=3, gamma=2, C=1);
+    elseif modelType == DecisionTreeClassifier
+        model = DecisionTreeClassifier(max_depth=4, random_state=1) 
+    else 
+        model = KNeighborsClassifier(3); 
+    end 
+
+    testOutputs = predict(model, inputs); 
+
 end;
