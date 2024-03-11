@@ -253,18 +253,6 @@ end
 using Random
 
 function holdOut(N::Int, P::Real)
-     indices = randperm(N)
-
-     num_test = round(Int, N * P)
-     
-     test_indices = indices[1:num_test]
-     train_indices = indices[num_test+1:end]
-     
-     return (train_indices, test_indices)
-end;
-
-
-function holdOut(N::Int, P::Real)
     indices = randperm(N)
 
     num_test = round(Int, N * P)
@@ -278,11 +266,11 @@ end;
 
 function holdOut(N::Int, Pval::Real, Ptest::Real)
    indices, test = holdOut(N, Ptest)
-   Pval = Pval * length(indices) / N
+   Pval = Pval * N / length(indices)
    val, train = holdOut(length(indices), Pval)
 
-   train = indices[1:length(train)]
-   val = indices[length(train)+1:end]
+   val = indices[1:length(train)]
+   train = indices[length(train)+1:end]
 
    return (train, val, test)
 end
