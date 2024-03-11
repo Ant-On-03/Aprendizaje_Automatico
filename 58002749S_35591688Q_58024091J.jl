@@ -377,7 +377,7 @@ function confusionMatrix(outputs::AbstractArray{Bool,1}, targets::AbstractArray{
 
     accuracy = (VP + VN) / (VP + VN + FP + FN)  # valor de precisión
     error_rate = 1 - accuracy  # Tasa de fallo
-    conf_mat = [VP FP; FN VN]
+    conf_mat = [VN FP; FN VP]
 
     return (accuracy, error_rate, sensitivity, specificity, VPP, VPN, f1_score, conf_mat)
 end
