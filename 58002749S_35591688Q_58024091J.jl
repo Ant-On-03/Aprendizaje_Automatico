@@ -418,79 +418,76 @@ function printConfusionMatrix(outputs::AbstractArray{<:Real,1},targets::Abstract
 end
 
 function confusionMatrix(outputs::AbstractArray{Bool,2}, targets::AbstractArray{Bool,2}; weighted::Bool=true)
+    # Verificar que el número de columnas es distinto de 2
+    size(outputs, 2) == size(targets, 2) != 2 || throw(ArgumentError("El número de columnas de ambas matrices debe ser igual y distinto de 2"))
 
-    size(outputs, 2) == size(targets, 2) && size(outputs, 2) != 2|| throw(ArgumentError("El número de columnas de ambas matrices no es igual y/o es 2"))
- 
     if size(outputs,2) == 1
         return confusionMatrix(outputs, targets)
     else 
-        num_classes = size(outputs, 2)  # Número de clases
-        num_samples = size(outputs, 1)  # Número de muestras
+        num_classes = size(outputs, 2)
+        num_samples = size(outputs, 1)
 
-        # Inicializar las métricas de clasificación para cada clase
-        sensitivity = Vector{Float64}()
-        specificity = Vector{Float64}()
-        VPP = Vector{Float64}()
-        VPN = Vector{Float64}()
-        f1_score = Vector{Float64}()
-
-        # Calcular las métricas de clasificación para cada clase
+        # Inicializar vectores para métricas por clase
+        sensitivity = zeros(Float64, num_classes)
+        specificity = zeros(Float64, num_classes)
+        VPP = zeros(Float64, num_classes)
+        VPN = zeros(Float64, num_classes)
+        f1_score = zeros(Float64, num_classes)
+    
+        # Calcular métricas por clase
         for c in 1:num_classes
-            # Obtener las predicciones y etiquetas correspondientes a la clase actual
             outputs_class = outputs[:, c]
             targets_class = targets[:, c]
-            
-            # Calcular las métricas de clasificación utilizando la función confusionMatrix
             metrics = confusionMatrix(outputs_class, targets_class)
-            
-            # Asignar los resultados a los vectores de métricas correspondientes
-            push!(sensitivity, metrics[3]) # Sensibilidad
-            push!(specificity, metrics[4]) # Especificidad
-            push!(VPP, metrics[5]) # Valor predictivo positivo
-            push!(VPN, metrics[6]) # Valor predictivo negativo
-            push!(f1_score, metrics[7]) # F1_score
-            
+
+            sensitivity[c] = metrics[3]
+            specificity[c] = metrics[4]
+            VPP[c] = metrics[5]
+            VPN[c] = metrics[6]
+            f1_score[c] = metrics[7]
         end
 
-        
         # Inicializar la matriz de confusión
         conf_mat = zeros(Int, num_classes, num_classes)
-        
+
         # Iterar sobre las muestras
         for i in 1:size(outputs, 1)
-            # Obtener la clase predicha y la clase real para esta muestra
-            predicted_class = argmax(outputs[i, :])
-            actual_class = argmax(targets[i, :])
-            
-            # Incrementar el recuento en la matriz de confusión
-            conf_mat[actual_class, predicted_class] += 1
-        end
-
-        # Calcular las métricas de forma macro o weighted según el parámetro
-        if weighted
-            weights = sum(targets, dims=1)  # Ponderación por clase
-            sensitivity_weighted = sum(sensitivity .* weights) / sum(weights)  # Sensibilidad ponderada
-            specificity_weighted = sum(specificity .* weights) / sum(weights)  # Especificidad ponderada
-            VPP_weighted = sum(VPP .* weights) / sum(weights)  # Valor predictivo positivo ponderado
-            VPN_weighted = sum(VPN .* weights) / sum(weights)  # Valor predictivo negativo ponderado
-            f1_score_weighted = sum(f1_score .* weights) / sum(weights)  # F1-score ponderado
-        else
-            sensitivity_weighted = mean(sensitivity)  # Sensibilidad macro
-            specificity_weighted = mean(specificity)  # Especificidad macro
-            VPP_weighted = mean(VPP)  # Valor predictivo positivo macro
-            VPN_weighted = mean(VPN)  # Valor predictivo negativo macro
-            f1_score_weighted = mean(f1_score)  # F1-score macro
-        end
-
-        accuracy1 = accuracy(outputs, targets)
-
-        # Calcular la tasa de error
-        error_rate = 1 - accuracy1
+        # Obtener la clase predicha y la clase real para esta muestra
+        predicted_class = argmax(outputs[i, :])
+        actual_class = argmax(targets[i, :])
         
-        return (accuracy1, error_rate, sensitivity_weighted, specificity_weighted, VPP_weighted, VPN_weighted, f1_score_weighted, conf_mat)
+        # Incrementar el recuento en la matriz de confusión
+        conf_mat[actual_class, predicted_class] += 1
+        end
+    
+    
+        # Calcular métricas macro o weighted
+        if weighted
+            weights = sum(targets, dims=1)[:]
+            sensitivity_weighted = sum(sensitivity .* weights) / sum(weights)
+            specificity_weighted = sum(specificity .* weights) / sum(weights)
+            VPP_weighted = sum(VPP .* weights) / sum(weights)
+            VPN_weighted = sum(VPN .* weights) / sum(weights)
+            f1_score_weighted = sum(f1_score .* weights) / sum(weights)
+        else
+            sensitivity_weighted = mean(sensitivity)
+            specificity_weighted = mean(specificity)
+            VPP_weighted = mean(VPP)
+            VPN_weighted = mean(VPN)
+            f1_score_weighted = mean(f1_score)
         end
 
-end;
+        # Calcular precisión y tasa de error
+        accuracy1 = accuracy(outputs, targets)
+        error_rate = 1 - accuracy1
+
+    end
+    
+        return (accuracy1, error_rate, sensitivity_weighted, specificity_weighted, VPP_weighted, VPN_weighted, f1_score_weighted, conf_mat)
+        
+    end
+
+    
 
 function confusionMatrix(outputs::AbstractArray{<:Real,2}, targets::AbstractArray{Bool,2}; weighted::Bool=true)
     outputs_bool = classifyOutputs(outputs)
