@@ -290,41 +290,81 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
     losses_train = Float64[]
     losses_validation = Float64[]
     losses_test = Float64[]
- 
+
     # Definir la función de pérdida
     loss_function(x, y) = Flux.Losses.mse(ann(x'), y')
- 
-    best_loss_validation = Inf
-    best_ann = deepcopy(ann)
- 
-    for epoch in 1:maxEpochs
-        # Entrenar un ciclo
-        Flux.train!(loss_function, Flux.params(ann), zip(eachrow(trainingDataset[1]), eachrow(trainingDataset[2])), ADAM(learningRate))
-       
-        # Calcular la pérdida en este ciclo para el conjunto de entrenamiento
-        loss_train = loss_function(trainingDataset[1]', trainingDataset[2]')
-        push!(losses_train, loss_train)
-       
-        # Calcular la pérdida en este ciclo para el conjunto de validación
+
+    loss_train = loss_function(trainingDataset[1]', trainingDataset[2]')
+    push!(losses_train, loss_train)
+    loss_test = loss_function(testDataset[1]', testDataset[2]')
+    push!(losses_test, loss_test)
+
+    if isempty(validationDataset[1]) && isempty(validationDataset[2])
+        # No se ha proporcionado ningún conjunto de validación   
+    else
+        # Se ha proporcionado un conjunto de validación
         loss_validation = loss_function(validationDataset[1]', validationDataset[2]')
         push!(losses_validation, loss_validation)
-       
-        # Calcular la pérdida en este ciclo para el conjunto de prueba
-        loss_test = loss_function(testDataset[1]', testDataset[2]')
-        push!(losses_test, loss_test)
-       
-        # Actualizar el modelo si se encuentra una pérdida de validación más baja
-        if loss_validation < best_loss_validation
-            best_loss_validation = loss_validation
-            best_ann = deepcopy(ann)
-        end
-       
-        # Criterio de parada temprana basado en el número de épocas sin mejorar la validación
-        if epoch >= maxEpochsVal && all(losses_validation[end-maxEpochsVal:end] .>= best_loss_validation)
-            break
-        end
+        
+        best_loss_validation = loss_validation
+        best_ann = deepcopy(ann)
     end
- 
+
+    
+    if isempty(validationDataset[1]) && isempty(validationDataset[2])
+        # No se ha proporcionado ningún conjunto de validación
+        for epoch in 1:maxEpochs
+            # Entrenar un ciclo
+            Flux.train!(loss_function, Flux.params(ann), zip(eachrow(trainingDataset[1]), eachrow(trainingDataset[2])), ADAM(learningRate))
+        
+            # Calcular la pérdida en este ciclo para el conjunto de entrenamiento
+            loss_train = loss_function(trainingDataset[1]', trainingDataset[2]')
+            push!(losses_train, loss_train)
+        
+            # Calcular la pérdida en este ciclo para el conjunto de prueba
+            loss_test = loss_function(testDataset[1]', testDataset[2]')
+            push!(losses_test, loss_test)
+
+            if epoch == maxEpochs
+                best_ann = deepcopy(ann)
+            end
+        end
+        
+    else
+        counter = 0
+        # No se ha proporcionado ningún conjunto de validación
+        for epoch in 1:maxEpochs
+            # Entrenar un ciclo
+            Flux.train!(loss_function, Flux.params(ann), zip(eachrow(trainingDataset[1]), eachrow(trainingDataset[2])), ADAM(learningRate))
+        
+            # Calcular la pérdida en este ciclo para el conjunto de entrenamiento
+            loss_train = loss_function(trainingDataset[1]', trainingDataset[2]')
+            push!(losses_train, loss_train)
+        
+            # Calcular la pérdida en este ciclo para el conjunto de validación
+            loss_validation = loss_function(validationDataset[1]', validationDataset[2]')
+            push!(losses_validation, loss_validation)
+        
+            # Calcular la pérdida en este ciclo para el conjunto de prueba
+            loss_test = loss_function(testDataset[1]', testDataset[2]')
+            push!(losses_test, loss_test)
+        
+            counter = counter + 1
+            # Actualizar el modelo si se encuentra una pérdida de validación más baja
+            if loss_validation < best_loss_validation
+                best_loss_validation = loss_validation
+                best_ann = deepcopy(ann)
+                counter = 0
+            end
+        
+            # Criterio de parada temprana basado en el número de épocas sin mejorar la validación
+            if counter >= maxEpochsVal
+                break
+            end
+        end
+    
+    end
+
     # Devolver la mejor RNA y los vectores de pérdidas
     return (best_ann, losses_train, losses_validation, losses_test)
 end;
