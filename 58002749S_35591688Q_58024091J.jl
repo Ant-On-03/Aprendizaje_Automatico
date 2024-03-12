@@ -286,7 +286,7 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
     maxEpochs::Int=1000, minLoss::Real=0.0, learningRate::Real=0.01, maxEpochsVal::Int=20)
    
     # Crear RNA
-    ann = buildClassANN(size(trainingDataset[1], 1), topology, size(trainingDataset[2], 1))
+    ann = buildClassANN(size(trainingDataset[1], 1), topology, size(trainingDataset[2], 1), transferFunctions)
     losses_train = Float64[]
     losses_validation = Float64[]
     losses_test = Float64[]
