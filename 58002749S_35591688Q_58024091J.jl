@@ -339,7 +339,7 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
         
     else
         counter = 0
-        # No se ha proporcionado ningún conjunto de validación
+        # Se ha proporcionado un conjunto de validación
         for epoch in 1:maxEpochs
             # Entrenar un ciclo
             Flux.train!(loss_function, Flux.params(ann), zip(eachrow(trainingDataset[1]), eachrow(trainingDataset[2])), ADAM(learningRate))
