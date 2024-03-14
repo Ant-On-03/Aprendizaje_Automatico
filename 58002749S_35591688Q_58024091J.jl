@@ -316,48 +316,30 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
     end
 
     
-    if isempty(validationDataset[1]) && isempty(validationDataset[2])
-        # No se ha proporcionado ningún conjunto de validación
-        for epoch in 1:maxEpochs
-            # Entrenar un ciclo
-            Flux.train!(loss_function, Flux.params(ann), zip(eachrow(trainingDataset[1]), eachrow(trainingDataset[2])), ADAM(learningRate))
-        
-            # Calcular la pérdida en este ciclo para el conjunto de entrenamiento
-            loss_train = loss_function(trainingDataset[1]', trainingDataset[2]')
-            push!(losses_train, loss_train)
-        
-            if !isempty(testDataset[1]) && !isempty(testDataset[2])
-                # Calcular la pérdida en este ciclo para el conjunto de prueba
-                loss_test = loss_function(testDataset[1]', testDataset[2]')
-                push!(losses_test, loss_test)
-            end
+    counter = 0
+    # Se ha proporcionado un conjunto de validación
+    for epoch in 1:maxEpochs
 
-            if epoch == maxEpochs
-                best_ann = deepcopy(ann)
-            end
-        end
-        
-    else
-        counter = 0
-        # Se ha proporcionado un conjunto de validación
-        for epoch in 1:maxEpochs
-            # Entrenar un ciclo
-            Flux.train!(loss_function, Flux.params(ann), zip(eachrow(trainingDataset[1]), eachrow(trainingDataset[2])), ADAM(learningRate))
-        
-            # Calcular la pérdida en este ciclo para el conjunto de entrenamiento
-            loss_train = loss_function(trainingDataset[1]', trainingDataset[2]')
-            push!(losses_train, loss_train)
-        
+        # Entrenar un ciclo
+        Flux.train!(loss_function, Flux.params(ann), zip(eachrow(trainingDataset[1]), eachrow(trainingDataset[2])), ADAM(learningRate))
+    
+        # Calcular la pérdida en este ciclo para el conjunto de entrenamiento
+        loss_train = loss_function(trainingDataset[1]', trainingDataset[2]')
+        push!(losses_train, loss_train)
+    
+        if !isempty(validationDataset[1]) && !isempty(validationDataset[2])
             # Calcular la pérdida en este ciclo para el conjunto de validación
             loss_validation = loss_function(validationDataset[1]', validationDataset[2]')
             push!(losses_validation, loss_validation)
-        
-            if !isempty(testDataset[1]) && !isempty(testDataset[2])
-                # Calcular la pérdida en este ciclo para el conjunto de prueba
-                loss_test = loss_function(testDataset[1]', testDataset[2]')
-                push!(losses_test, loss_test)
-            end
-        
+        end
+    
+        if !isempty(testDataset[1]) && !isempty(testDataset[2])
+            # Calcular la pérdida en este ciclo para el conjunto de prueba
+            loss_test = loss_function(testDataset[1]', testDataset[2]')
+            push!(losses_test, loss_test)
+        end
+    
+        if !isempty(validationDataset[1]) && !isempty(validationDataset[2])
             counter = counter + 1
             # Actualizar el modelo si se encuentra una pérdida de validación más baja
             if loss_validation < best_loss_validation
@@ -365,13 +347,18 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
                 best_ann = deepcopy(ann)
                 counter = 0
             end
-        
+        end
+    
+        if !isempty(validationDataset[1]) && !isempty(validationDataset[2])
             # Criterio de parada temprana basado en el número de épocas sin mejorar la validación
             if counter >= maxEpochsVal
                 break
             end
         end
-    
+    end
+
+    if isempty(validationDataset[1]) && isempty(validationDataset[2])
+        best_ann = deepcopy(ann)
     end
 
     # Devolver la mejor RNA y los vectores de pérdidas
