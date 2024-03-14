@@ -4,6 +4,13 @@
 # -----------------------------------------Entrenamiento----------------------------------------
 # ----------------------------------------------------------------------------------------------
 
+
+
+
+# HE CAMBIADO COSAS
+
+
+
 using Statistics
 using Flux
 using Flux.Losses
@@ -571,6 +578,7 @@ function crossvalidation(N::Int64, k::Int64)
     
 end;
 
+
 function crossvalidation(targets::AbstractArray{Bool,1}, k::Int64)
     # muestreo de forma estratificada en k subconjuntos.
     # para un vector devolver un índice asignando a cada posición un elemento mediante muestreo estratificado.
@@ -598,12 +606,13 @@ function crossvalidation(targets::AbstractArray{Bool,2}, k::Int64)
 end;
 
 
+
 function crossvalidation(targets::AbstractArray{<:Any,1}, k::Int64)    
 
     # Ambas soluciones funcionan. Quizás la segunda sea más rápida.
 
     #Sol1.
-    #return crossvalidation(oneHotEncoding(targets), k)
+    # return crossvalidation(oneHotEncoding(targets), k)
 
 
     #Sol2.
@@ -650,3 +659,4 @@ function modelCrossValidation(modelType::Symbol, modelHyperparameters::Dict, inp
     # Codigo a desarrollar
     #
 end;
+
