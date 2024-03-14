@@ -326,13 +326,7 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
         # Calcular la pérdida en este ciclo para el conjunto de entrenamiento
         loss_train = loss_function(trainingDataset[1]', trainingDataset[2]')
         push!(losses_train, loss_train)
-    
-        if !isempty(validationDataset[1]) && !isempty(validationDataset[2])
-            # Calcular la pérdida en este ciclo para el conjunto de validación
-            loss_validation = loss_function(validationDataset[1]', validationDataset[2]')
-            push!(losses_validation, loss_validation)
-        end
-    
+
         if !isempty(testDataset[1]) && !isempty(testDataset[2])
             # Calcular la pérdida en este ciclo para el conjunto de prueba
             loss_test = loss_function(testDataset[1]', testDataset[2]')
@@ -340,6 +334,10 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
         end
     
         if !isempty(validationDataset[1]) && !isempty(validationDataset[2])
+            # Calcular la pérdida en este ciclo para el conjunto de validación
+            loss_validation = loss_function(validationDataset[1]', validationDataset[2]')
+            push!(losses_validation, loss_validation)
+
             counter = counter + 1
             # Actualizar el modelo si se encuentra una pérdida de validación más baja
             if loss_validation < best_loss_validation
@@ -347,14 +345,13 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
                 best_ann = deepcopy(ann)
                 counter = 0
             end
-        end
-    
-        if !isempty(validationDataset[1]) && !isempty(validationDataset[2])
+
             # Criterio de parada temprana basado en el número de épocas sin mejorar la validación
             if counter >= maxEpochsVal
                 break
             end
         end
+    
         if loss_train <= minLoss
             break
         end
