@@ -355,6 +355,9 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
                 break
             end
         end
+        if loss_train <= minLoss
+            break
+        end
     end
 
     if isempty(validationDataset[1]) && isempty(validationDataset[2])
