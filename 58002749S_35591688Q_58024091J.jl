@@ -227,7 +227,7 @@ end
 
 function trainClassANN(topology::AbstractArray{<:Int,1}, dataset::Tuple{AbstractArray{<:Real,2}, AbstractArray{Bool,2}}; transferFunctions::AbstractArray{<:Function,1}=fill(σ, length(topology)), maxEpochs::Int=1000, minLoss::Real=0.0, learningRate::Real=0.01)
     # Crear RNA
-    ann = buildClassANN(size(dataset[1], 1), topology, size(dataset[2], 1))
+    ann = buildClassANN(size(dataset[1], 1), topology, size(dataset[2], 1), transferFunctions)
     losses = Float64[]
     # Definir la función de pérdida
     loss_function(x, y) = Flux.Losses.mse(ann(x'), y')
@@ -260,18 +260,6 @@ end
 using Random
 
 function holdOut(N::Int, P::Real)
-     indices = randperm(N)
-
-     num_test = round(Int, N * P)
-     
-     test_indices = indices[1:num_test]
-     train_indices = indices[num_test+1:end]
-     
-     return (train_indices, test_indices)
-end;
-
-
-function holdOut(N::Int, P::Real)
     indices = randperm(N)
 
     num_test = round(Int, N * P)
@@ -285,11 +273,11 @@ end;
 
 function holdOut(N::Int, Pval::Real, Ptest::Real)
    indices, test = holdOut(N, Ptest)
-   Pval = Pval * length(indices) / N
+   Pval = Pval * N / length(indices)
    val, train = holdOut(length(indices), Pval)
 
-   train = indices[1:length(train)]
-   val = indices[length(train)+1:end]
+   val = indices[1:length(train)]
+   train = indices[length(train)+1:end]
 
    return (train, val, test)
 end
@@ -305,45 +293,84 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
     maxEpochs::Int=1000, minLoss::Real=0.0, learningRate::Real=0.01, maxEpochsVal::Int=20)
    
     # Crear RNA
-    ann = buildClassANN(size(trainingDataset[1], 1), topology, size(trainingDataset[2], 1))
+    ann = buildClassANN(size(trainingDataset[1], 1), topology, size(trainingDataset[2], 1), transferFunctions)
     losses_train = Float64[]
     losses_validation = Float64[]
     losses_test = Float64[]
- 
+
     # Definir la función de pérdida
     loss_function(x, y) = Flux.Losses.mse(ann(x'), y')
- 
-    best_loss_validation = Inf
-    best_ann = deepcopy(ann)
- 
+
+    loss_train = loss_function(trainingDataset[1]', trainingDataset[2]')
+    push!(losses_train, loss_train)
+
+    if isempty(validationDataset[1]) && isempty(validationDataset[2])
+        # No se ha proporcionado ningún conjunto de validación   
+    else
+        # Se ha proporcionado un conjunto de validación
+        loss_validation = loss_function(validationDataset[1]', validationDataset[2]')
+        push!(losses_validation, loss_validation)
+        
+        best_loss_validation = loss_validation
+        best_ann = deepcopy(ann)
+    end
+
+    if isempty(testDataset[1]) && isempty(testDataset[2])
+        # No se ha proporcionado ningún conjunto de validación   
+    else
+        loss_test = loss_function(testDataset[1]', testDataset[2]')
+        push!(losses_test, loss_test)
+    end
+
+    
+    counter = 0
+    # Se ha proporcionado un conjunto de validación
     for epoch in 1:maxEpochs
+
         # Entrenar un ciclo
         Flux.train!(loss_function, Flux.params(ann), zip(eachrow(trainingDataset[1]), eachrow(trainingDataset[2])), ADAM(learningRate))
-       
+    
         # Calcular la pérdida en este ciclo para el conjunto de entrenamiento
         loss_train = loss_function(trainingDataset[1]', trainingDataset[2]')
         push!(losses_train, loss_train)
-       
-        # Calcular la pérdida en este ciclo para el conjunto de validación
-        loss_validation = loss_function(validationDataset[1]', validationDataset[2]')
-        push!(losses_validation, loss_validation)
-       
-        # Calcular la pérdida en este ciclo para el conjunto de prueba
-        loss_test = loss_function(testDataset[1]', testDataset[2]')
-        push!(losses_test, loss_test)
-       
-        # Actualizar el modelo si se encuentra una pérdida de validación más baja
-        if loss_validation < best_loss_validation
-            best_loss_validation = loss_validation
-            best_ann = deepcopy(ann)
+    
+        if !isempty(validationDataset[1]) && !isempty(validationDataset[2])
+            # Calcular la pérdida en este ciclo para el conjunto de validación
+            loss_validation = loss_function(validationDataset[1]', validationDataset[2]')
+            push!(losses_validation, loss_validation)
         end
-       
-        # Criterio de parada temprana basado en el número de épocas sin mejorar la validación
-        if epoch >= maxEpochsVal && all(losses_validation[end-maxEpochsVal:end] .>= best_loss_validation)
+    
+        if !isempty(testDataset[1]) && !isempty(testDataset[2])
+            # Calcular la pérdida en este ciclo para el conjunto de prueba
+            loss_test = loss_function(testDataset[1]', testDataset[2]')
+            push!(losses_test, loss_test)
+        end
+    
+        if !isempty(validationDataset[1]) && !isempty(validationDataset[2])
+            counter = counter + 1
+            # Actualizar el modelo si se encuentra una pérdida de validación más baja
+            if loss_validation < best_loss_validation
+                best_loss_validation = loss_validation
+                best_ann = deepcopy(ann)
+                counter = 0
+            end
+        end
+    
+        if !isempty(validationDataset[1]) && !isempty(validationDataset[2])
+            # Criterio de parada temprana basado en el número de épocas sin mejorar la validación
+            if counter >= maxEpochsVal
+                break
+            end
+        end
+        if loss_train <= minLoss
             break
         end
     end
- 
+
+    if isempty(validationDataset[1]) && isempty(validationDataset[2])
+        best_ann = deepcopy(ann)
+    end
+
     # Devolver la mejor RNA y los vectores de pérdidas
     return (best_ann, losses_train, losses_validation, losses_test)
 end;
@@ -384,7 +411,7 @@ function confusionMatrix(outputs::AbstractArray{Bool,1}, targets::AbstractArray{
 
     accuracy = (VP + VN) / (VP + VN + FP + FN)  # valor de precisión
     error_rate = 1 - accuracy  # Tasa de fallo
-    conf_mat = [VP FP; FN VN]
+    conf_mat = [VN FP; FN VP]
 
     return (accuracy, error_rate, sensitivity, specificity, VPP, VPN, f1_score, conf_mat)
 end
@@ -425,44 +452,38 @@ function printConfusionMatrix(outputs::AbstractArray{<:Real,1},targets::Abstract
 end
 
 function confusionMatrix(outputs::AbstractArray{Bool,2}, targets::AbstractArray{Bool,2}; weighted::Bool=true)
+    # Verificar que el número de columnas es distinto de 2
+    size(outputs, 2) == size(targets, 2) != 2 || throw(ArgumentError("El número de columnas de ambas matrices debe ser igual y distinto de 2"))
 
-    size(outputs, 2) == size(targets, 2) && size(outputs, 2) != 2|| throw(ArgumentError("El número de columnas de ambas matrices no es igual y/o es 2"))
- 
     if size(outputs,2) == 1
         return confusionMatrix(outputs, targets)
     else 
-        num_classes = size(outputs, 2)  # Número de clases
-        num_samples = size(outputs, 1)  # Número de muestras
+        num_classes = size(outputs, 2)
+        num_samples = size(outputs, 1)
 
-        # Inicializar las métricas de clasificación para cada clase
-        sensitivity = Vector{Float64}()
-        specificity = Vector{Float64}()
-        VPP = Vector{Float64}()
-        VPN = Vector{Float64}()
-        f1_score = Vector{Float64}()
-
-        # Calcular las métricas de clasificación para cada clase
+        # Inicializar vectores para métricas por clase
+        sensitivity = zeros(Float64, num_classes)
+        specificity = zeros(Float64, num_classes)
+        VPP = zeros(Float64, num_classes)
+        VPN = zeros(Float64, num_classes)
+        f1_score = zeros(Float64, num_classes)
+    
+        # Calcular métricas por clase
         for c in 1:num_classes
-            # Obtener las predicciones y etiquetas correspondientes a la clase actual
             outputs_class = outputs[:, c]
             targets_class = targets[:, c]
-            
-            # Calcular las métricas de clasificación utilizando la función confusionMatrix
             metrics = confusionMatrix(outputs_class, targets_class)
-            
-            # Asignar los resultados a los vectores de métricas correspondientes
-            push!(sensitivity, metrics[3]) # Sensibilidad
-            push!(specificity, metrics[4]) # Especificidad
-            push!(VPP, metrics[5]) # Valor predictivo positivo
-            push!(VPN, metrics[6]) # Valor predictivo negativo
-            push!(f1_score, metrics[7]) # F1_score
-            
+
+            sensitivity[c] = metrics[3]
+            specificity[c] = metrics[4]
+            VPP[c] = metrics[5]
+            VPN[c] = metrics[6]
+            f1_score[c] = metrics[7]
         end
 
-        
         # Inicializar la matriz de confusión
         conf_mat = zeros(Int, num_classes, num_classes)
-        
+
         # Iterar sobre las muestras
         for i in 1:size(outputs, 1)
             # Obtener la clase predicha y la clase real para esta muestra
@@ -472,38 +493,41 @@ function confusionMatrix(outputs::AbstractArray{Bool,2}, targets::AbstractArray{
             # Incrementar el recuento en la matriz de confusión
             conf_mat[actual_class, predicted_class] += 1
         end
-
-        # Calcular las métricas de forma macro o weighted según el parámetro
+    
+    
+        # Calcular métricas macro o weighted
         if weighted
-            weights = sum(targets, dims=1)  # Ponderación por clase
-            sensitivity_weighted = sum(sensitivity .* weights) / sum(weights)  # Sensibilidad ponderada
-            specificity_weighted = sum(specificity .* weights) / sum(weights)  # Especificidad ponderada
-            VPP_weighted = sum(VPP .* weights) / sum(weights)  # Valor predictivo positivo ponderado
-            VPN_weighted = sum(VPN .* weights) / sum(weights)  # Valor predictivo negativo ponderado
-            f1_score_weighted = sum(f1_score .* weights) / sum(weights)  # F1-score ponderado
+            weights = sum(targets, dims=1)[:]
+            sensitivity_weighted = sum(sensitivity .* weights) / sum(weights)
+            specificity_weighted = sum(specificity .* weights) / sum(weights)
+            VPP_weighted = sum(VPP .* weights) / sum(weights)
+            VPN_weighted = sum(VPN .* weights) / sum(weights)
+            f1_score_weighted = sum(f1_score .* weights) / sum(weights)
         else
-            sensitivity_weighted = mean(sensitivity)  # Sensibilidad macro
-            specificity_weighted = mean(specificity)  # Especificidad macro
-            VPP_weighted = mean(VPP)  # Valor predictivo positivo macro
-            VPN_weighted = mean(VPN)  # Valor predictivo negativo macro
-            f1_score_weighted = mean(f1_score)  # F1-score macro
+            sensitivity_weighted = mean(sensitivity)
+            specificity_weighted = mean(specificity)
+            VPP_weighted = mean(VPP)
+            VPN_weighted = mean(VPN)
+            f1_score_weighted = mean(f1_score)
         end
 
+        # Calcular precisión y tasa de error
         accuracy1 = accuracy(outputs, targets)
-
-        # Calcular la tasa de error
         error_rate = 1 - accuracy1
-        
+
+    end
+    
         return (accuracy1, error_rate, sensitivity_weighted, specificity_weighted, VPP_weighted, VPN_weighted, f1_score_weighted, conf_mat)
-        end
+        
+    end
 
-end;
-
+    
 function confusionMatrix(outputs::AbstractArray{<:Real,2}, targets::AbstractArray{Bool,2}; weighted::Bool=true)
     outputs_bool = classifyOutputs(outputs)
 
     return confusionMatrix(outputs_bool, targets; weighted)
 end;
+
 
 function confusionMatrix(outputs::AbstractArray{<:Any,1}, targets::AbstractArray{<:Any,1}; weighted::Bool=true)
     # Verificar que los vectores tengan la misma longitud
@@ -649,14 +673,21 @@ end;
 
 using ScikitLearn: @sk_import, fit!, predict
 
-#@sk_import svm: SVC
-#@sk_import tree: DecisionTreeClassifier
-#@sk_import neighbors: KNeighborsClassifier
+@sk_import svm: SVC
+@sk_import tree: DecisionTreeClassifier
+@sk_import neighbors: KNeighborsClassifier
 
 
 function modelCrossValidation(modelType::Symbol, modelHyperparameters::Dict, inputs::AbstractArray{<:Real,2}, targets::AbstractArray{<:Any,1}, crossValidationIndices::Array{Int64,1})
-    #
-    # Codigo a desarrollar
-    #
+    if modelType == SVC
+        model = SVC(kernel="rbf", degree=3, gamma=2, C=1);
+    elseif modelType == DecisionTreeClassifier
+        model = DecisionTreeClassifier(max_depth=4, random_state=1) 
+    else 
+        model = KNeighborsClassifier(3); 
+    end 
+
+    testOutputs = predict(model, inputs); 
+
 end;
 
