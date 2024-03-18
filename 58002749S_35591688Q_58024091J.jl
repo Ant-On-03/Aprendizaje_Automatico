@@ -292,7 +292,7 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
     losses_test = Float64[]
 
     # Definir la función de pérdida
-    loss(model, x,y) = (size(y,1) == 1) ? Losses.binarycrossentropy(model(x),y) : Losses.crossentropy(model(x),y);
+    loss(ann, x,y) = (size(y,1) == 1) ? Losses.binarycrossentropy(ann(x),y) : Losses.crossentropy(ann(x),y);
 
     loss_train = loss_function(trainingDataset[1]', trainingDataset[2]')
     push!(losses_train, loss_train)
