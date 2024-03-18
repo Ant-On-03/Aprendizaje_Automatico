@@ -297,10 +297,7 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
     loss_train = loss_function(trainingDataset[1]', trainingDataset[2]')
     push!(losses_train, loss_train)
 
-    if isempty(validationDataset[1]) && isempty(validationDataset[2])
-        # No se ha proporcionado ningún conjunto de validación   
-    else
-        # Se ha proporcionado un conjunto de validación
+    if !(isempty(validationDataset[1]) && isempty(validationDataset[2]))
         loss_validation = loss_function(validationDataset[1]', validationDataset[2]')
         push!(losses_validation, loss_validation)
         
@@ -308,9 +305,7 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
         best_ann = deepcopy(ann)
     end
 
-    if isempty(testDataset[1]) && isempty(testDataset[2])
-        # No se ha proporcionado ningún conjunto de validación   
-    else
+    if !(isempty(testDataset[1]) && isempty(testDataset[2]))
         loss_test = loss_function(testDataset[1]', testDataset[2]')
         push!(losses_test, loss_test)
     end
@@ -327,13 +322,13 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
         loss_train = loss_function(trainingDataset[1]', trainingDataset[2]')
         push!(losses_train, loss_train)
 
-        if !isempty(testDataset[1]) && !isempty(testDataset[2])
+        if !(isempty(testDataset[1]) && isempty(testDataset[2]))
             # Calcular la pérdida en este ciclo para el conjunto de prueba
             loss_test = loss_function(testDataset[1]', testDataset[2]')
             push!(losses_test, loss_test)
         end
     
-        if !isempty(validationDataset[1]) && !isempty(validationDataset[2])
+        if !(isempty(validationDataset[1]) && isempty(validationDataset[2]))
             # Calcular la pérdida en este ciclo para el conjunto de validación
             loss_validation = loss_function(validationDataset[1]', validationDataset[2]')
             push!(losses_validation, loss_validation)
