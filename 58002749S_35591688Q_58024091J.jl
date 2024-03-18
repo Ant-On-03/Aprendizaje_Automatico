@@ -223,7 +223,7 @@ function trainClassANN(topology::AbstractArray{<:Int,1}, dataset::Tuple{Abstract
     ann = buildClassANN(size(dataset[1], 1), topology, size(dataset[2], 1), transferFunctions)
     losses = Float64[]
     # Definir la función de pérdida
-    loss_function(x, y) = Flux.Losses.mse(ann(x'), y')
+    loss(model, x,y) = (size(y,1) == 1) ? Losses.binarycrossentropy(model(x),y) : Losses.crossentropy(model(x),y);
     # Entrenamiento
     for epoch in 1:maxEpochs
         # Entrenar un ciclo
@@ -292,7 +292,7 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
     losses_test = Float64[]
 
     # Definir la función de pérdida
-    loss_function(x, y) = Flux.Losses.mse(ann(x'), y')
+    loss(model, x,y) = (size(y,1) == 1) ? Losses.binarycrossentropy(model(x),y) : Losses.crossentropy(model(x),y);
 
     loss_train = loss_function(trainingDataset[1]', trainingDataset[2]')
     push!(losses_train, loss_train)
