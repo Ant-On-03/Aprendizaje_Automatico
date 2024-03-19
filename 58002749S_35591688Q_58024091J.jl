@@ -292,13 +292,13 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
     losses_test = Float64[]
 
     # Definir la función de pérdida
-    loss(ann, x,y) = (size(y,1) == 1) ? Losses.binarycrossentropy(ann(x),y) : Losses.crossentropy(ann(x),y);
+    loss_function(ann, x,y) = (size(y,1) == 1) ? Losses.binarycrossentropy(ann(x),y) : Losses.crossentropy(ann(x),y);
 
-    loss_train = loss_function(trainingDataset[1]', trainingDataset[2]')
+    loss_train = loss_function(ann, trainingDataset[1]', trainingDataset[2]')
     push!(losses_train, loss_train)
 
     if !(isempty(validationDataset[1]) && isempty(validationDataset[2]))
-        loss_validation = loss_function(validationDataset[1]', validationDataset[2]')
+        loss_validation = loss_function(ann, validationDataset[1]', validationDataset[2]')
         push!(losses_validation, loss_validation)
         
         best_loss_validation = loss_validation
@@ -306,7 +306,7 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
     end
 
     if !(isempty(testDataset[1]) && isempty(testDataset[2]))
-        loss_test = loss_function(testDataset[1]', testDataset[2]')
+        loss_test = loss_function(ann, testDataset[1]', testDataset[2]')
         push!(losses_test, loss_test)
     end
 
@@ -319,18 +319,18 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
         Flux.train!(loss_function, Flux.params(ann), zip(eachrow(trainingDataset[1]), eachrow(trainingDataset[2])), ADAM(learningRate))
     
         # Calcular la pérdida en este ciclo para el conjunto de entrenamiento
-        loss_train = loss_function(trainingDataset[1]', trainingDataset[2]')
+        loss_train = loss_function(ann, trainingDataset[1]', trainingDataset[2]')
         push!(losses_train, loss_train)
 
         if !(isempty(testDataset[1]) && isempty(testDataset[2]))
             # Calcular la pérdida en este ciclo para el conjunto de prueba
-            loss_test = loss_function(testDataset[1]', testDataset[2]')
+            loss_test = loss_function(ann, testDataset[1]', testDataset[2]')
             push!(losses_test, loss_test)
         end
     
         if !(isempty(validationDataset[1]) && isempty(validationDataset[2]))
             # Calcular la pérdida en este ciclo para el conjunto de validación
-            loss_validation = loss_function(validationDataset[1]', validationDataset[2]')
+            loss_validation = loss_function(ann, validationDataset[1]', validationDataset[2]')
             push!(losses_validation, loss_validation)
 
             counter = counter + 1
@@ -345,11 +345,13 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
             if counter >= maxEpochsVal
                 break
             end
+
         end
-    
+
         if loss_train <= minLoss
             break
         end
+        
     end
 
     if isempty(validationDataset[1]) && isempty(validationDataset[2])
