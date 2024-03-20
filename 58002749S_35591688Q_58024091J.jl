@@ -329,7 +329,7 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
     for epoch in 1:maxEpochs
 
         # Entrenar un ciclo
-        Flux.train!(loss, ann, trainingDataset[1]', trainingDataset[2], opt_state)
+        Flux.train!(loss, ann, [(trainingDataset[1]', trainingDataset[2]')], opt_state)
     
         # Calcular la pérdida en este ciclo para el conjunto de entrenamiento
         loss_train = loss(ann, trainingDataset[1]', trainingDataset[2]')
