@@ -293,7 +293,7 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
     maxEpochs::Int=1000, minLoss::Real=0.0, learningRate::Real=0.01, maxEpochsVal::Int=20)
    
     # Crear RNA
-    ann = buildClassANN(size(trainingDataset[1], 1), topology, size(trainingDataset[2], 1), transferFunctions)
+    ann = buildClassANN(size(trainingDataset[1], 1), topology, size(trainingDataset[2], 1), transferFunctions=transferFunctions)
     losses_train = Float64[]
     losses_validation = Float64[]
     losses_test = Float64[]
@@ -304,26 +304,23 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
     loss_train = loss_function(trainingDataset[1]', trainingDataset[2]')
     push!(losses_train, loss_train)
 
-    if isempty(validationDataset[1]) && isempty(validationDataset[2])
-        # No se ha proporcionado ningún conjunto de validación   
-    else
+    if !(isempty(validationDataset[1]) && isempty(validationDataset[2]) )
         # Se ha proporcionado un conjunto de validación
         loss_validation = loss_function(validationDataset[1]', validationDataset[2]')
         push!(losses_validation, loss_validation)
         
         best_loss_validation = loss_validation
         best_ann = deepcopy(ann)
+
+        counter = 0
     end
 
-    if isempty(testDataset[1]) && isempty(testDataset[2])
-        # No se ha proporcionado ningún conjunto de validación   
-    else
+    if !(isempty(testDataset[1]) && isempty(testDataset[2]))
         loss_test = loss_function(testDataset[1]', testDataset[2]')
         push!(losses_test, loss_test)
     end
 
     
-    counter = 0
     # Se ha proporcionado un conjunto de validación
     for epoch in 1:maxEpochs
 
@@ -334,13 +331,13 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
         loss_train = loss_function(trainingDataset[1]', trainingDataset[2]')
         push!(losses_train, loss_train)
 
-        if !isempty(testDataset[1]) && !isempty(testDataset[2])
+        if !(isempty(testDataset[1]) && isempty(testDataset[2]))
             # Calcular la pérdida en este ciclo para el conjunto de prueba
             loss_test = loss_function(testDataset[1]', testDataset[2]')
             push!(losses_test, loss_test)
         end
     
-        if !isempty(validationDataset[1]) && !isempty(validationDataset[2])
+        if !(isempty(validationDataset[1]) && isempty(validationDataset[2]))
             # Calcular la pérdida en este ciclo para el conjunto de validación
             loss_validation = loss_function(validationDataset[1]', validationDataset[2]')
             push!(losses_validation, loss_validation)
@@ -650,7 +647,6 @@ function crossvalidation(targets::AbstractArray{<:Any,1}, k::Int64)
 end;
 
 
-
 function ANNCrossValidation(topology::AbstractArray{<:Int,1},
     inputs::AbstractArray{<:Real,2}, targets::AbstractArray{<:Any,1},
     crossValidationIndices::Array{Int64,1};
@@ -658,9 +654,42 @@ function ANNCrossValidation(topology::AbstractArray{<:Int,1},
     transferFunctions::AbstractArray{<:Function,1}=fill(σ, length(topology)),
     maxEpochs::Int=1000, minLoss::Real=0.0, learningRate::Real=0.01, validationRatio::Real=0, maxEpochsVal::Int=20, showText::Bool=false)
     
-    #
-    # Codigo a desarrollar
-    #
+
+    # cálculo del número de folds de k-fold (número de grupos)
+    nfolds = maximum(crossValidationIndices)
+
+    # Inicializar vectores de métricas a tomar.
+    precision = []
+    tasaerror = []
+    sensibilidad = []
+    especificidad = []
+    VPP = []
+    VPN = []
+    F1 = []
+
+    # oneHotEncodings
+    targets = oneHotEncoding(targets)
+
+    for fold in 1:nfolds
+        println(fold)
+
+        # a partir de matrices de entrada y 
+        # salida deseada, índices de crossvalidation, número de fold. (4 variables)
+        inputsTraining = []
+        targetsTraining = []
+        inputsTest = []
+        targetsTest = []
+        
+
+
+
+
+
+
+    end
+
+
+
 end;
 
 
