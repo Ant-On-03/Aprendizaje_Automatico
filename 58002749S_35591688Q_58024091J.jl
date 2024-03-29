@@ -5,12 +5,17 @@
 # ----------------------------------------------------------------------------------------------
 
 
+<<<<<<< HEAD
 
 
 # HE CAMBIADO COSAS
 
 
 
+=======
+using FileIO
+using DelimitedFiles
+>>>>>>> 1579ec6c45c2b18751d3d638f46fa651a87aa093
 using Statistics
 using Flux
 using Flux.Losses
@@ -230,13 +235,18 @@ function trainClassANN(topology::AbstractArray{<:Int,1}, dataset::Tuple{Abstract
     ann = buildClassANN(size(dataset[1], 1), topology, size(dataset[2], 1), transferFunctions)
     losses = Float64[]
     # Definir la función de pérdida
-    loss_function(x, y) = Flux.Losses.mse(ann(x'), y')
+    loss(ann, x,y) = (size(y,1) == 1) ? Losses.binarycrossentropy(ann(x),y) : Losses.crossentropy(ann(x),y);
+    opt_state = Flux.setup(Adam(learningRate), ann)
+
+    inputs = dataset[1]
+    targets = dataset[2]
+
     # Entrenamiento
     for epoch in 1:maxEpochs
         # Entrenar un ciclo
-        Flux.train!(loss_function, Flux.params(ann), zip(eachrow(dataset[1]), eachrow(dataset[2])), ADAM(learningRate))
+        Flux.train!(loss, ann, [(inputs', targets')], opt_state)
         # Calcular la pérdida en este ciclo
-        loss_value = loss_function(dataset[1]', dataset[2]')
+        loss_value = loss(dataset[1]', dataset[2]')
         # Almacenar el valor de pérdida
         push!(losses, loss_value)
         # Criterio de parada
@@ -293,20 +303,34 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
     maxEpochs::Int=1000, minLoss::Real=0.0, learningRate::Real=0.01, maxEpochsVal::Int=20)
    
     # Crear RNA
+<<<<<<< HEAD
     ann = buildClassANN(size(trainingDataset[1], 1), topology, size(trainingDataset[2], 1), transferFunctions=transferFunctions)
+=======
+    ann = buildClassANN(size(trainingDataset[1], 2), topology, size(trainingDataset[2], 2); transferFunctions=transferFunctions)
+>>>>>>> 1579ec6c45c2b18751d3d638f46fa651a87aa093
     losses_train = Float64[]
     losses_validation = Float64[]
     losses_test = Float64[]
 
     # Definir la función de pérdida
-    loss_function(x, y) = Flux.Losses.mse(ann(x'), y')
+    loss(ann, x,y) = (size(y,1) == 1) ? Losses.binarycrossentropy(ann(x),y) : Losses.crossentropy(ann(x),y);
+    opt_state = Flux.setup(Adam(learningRate), ann)
 
-    loss_train = loss_function(trainingDataset[1]', trainingDataset[2]')
+    inputs = trainingDataset[1]
+    targets = trainingDataset[2]
+
+    loss_train = loss(ann, trainingDataset[1]', trainingDataset[2]')
+
     push!(losses_train, loss_train)
 
+<<<<<<< HEAD
     if !(isempty(validationDataset[1]) && isempty(validationDataset[2]) )
         # Se ha proporcionado un conjunto de validación
         loss_validation = loss_function(validationDataset[1]', validationDataset[2]')
+=======
+    if !(isempty(validationDataset[1]) && isempty(validationDataset[2]))
+        loss_validation = loss(ann, validationDataset[1]', validationDataset[2]')
+>>>>>>> 1579ec6c45c2b18751d3d638f46fa651a87aa093
         push!(losses_validation, loss_validation)
         
         best_loss_validation = loss_validation
@@ -316,7 +340,11 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
     end
 
     if !(isempty(testDataset[1]) && isempty(testDataset[2]))
+<<<<<<< HEAD
         loss_test = loss_function(testDataset[1]', testDataset[2]')
+=======
+        loss_test = loss(ann, testDataset[1]', testDataset[2]')
+>>>>>>> 1579ec6c45c2b18751d3d638f46fa651a87aa093
         push!(losses_test, loss_test)
     end
 
@@ -325,21 +353,21 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
     for epoch in 1:maxEpochs
 
         # Entrenar un ciclo
-        Flux.train!(loss_function, Flux.params(ann), zip(eachrow(trainingDataset[1]), eachrow(trainingDataset[2])), ADAM(learningRate))
+        Flux.train!(loss, ann, [(trainingDataset[1]', trainingDataset[2]')], opt_state)
     
         # Calcular la pérdida en este ciclo para el conjunto de entrenamiento
-        loss_train = loss_function(trainingDataset[1]', trainingDataset[2]')
+        loss_train = loss(ann, trainingDataset[1]', trainingDataset[2]')
         push!(losses_train, loss_train)
 
         if !(isempty(testDataset[1]) && isempty(testDataset[2]))
             # Calcular la pérdida en este ciclo para el conjunto de prueba
-            loss_test = loss_function(testDataset[1]', testDataset[2]')
+            loss_test = loss(ann, testDataset[1]', testDataset[2]')
             push!(losses_test, loss_test)
         end
     
         if !(isempty(validationDataset[1]) && isempty(validationDataset[2]))
             # Calcular la pérdida en este ciclo para el conjunto de validación
-            loss_validation = loss_function(validationDataset[1]', validationDataset[2]')
+            loss_validation = loss(ann, validationDataset[1]', validationDataset[2]')
             push!(losses_validation, loss_validation)
 
             counter = counter + 1
@@ -354,11 +382,13 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
             if counter >= maxEpochsVal
                 break
             end
+
         end
-    
+
         if loss_train <= minLoss
             break
         end
+        
     end
 
     if isempty(validationDataset[1]) && isempty(validationDataset[2])
@@ -746,15 +776,64 @@ using ScikitLearn: @sk_import, fit!, predict
 
 
 function modelCrossValidation(modelType::Symbol, modelHyperparameters::Dict, inputs::AbstractArray{<:Real,2}, targets::AbstractArray{<:Any,1}, crossValidationIndices::Array{Int64,1})
-    if modelType == SVC
-        model = SVC(kernel="rbf", degree=3, gamma=2, C=1);
-    elseif modelType == DecisionTreeClassifier
-        model = DecisionTreeClassifier(max_depth=4, random_state=1) 
-    else 
-        model = KNeighborsClassifier(3); 
-    end 
+    num_folds = length(crossValidationIndices)
+    fold_accuracies = Float64[]
+    
+    # Comprobar si se desea entrenar redes de neuronas
+    if modelType == :ANN & haskey(modelHyperparameters, :topology)
+        # Llamar a ANNCrossValidation con los parámetros especificados
+        return ANNCrossValidation(modelHyperparameters, inputs, targets, crossValidationIndices)
+    end
+    
+    # Iterar sobre las particiones de validación cruzada
+    for i in 1:num_folds
+        # Dividir los datos en conjuntos de entrenamiento, validación y prueba utilizando holdOut
+        train_indices, test_indices, val_indices = holdOut(length(targets), 0.2, 0.1)
+        
+        training_inputs = inputs[train_indices, :]
+        training_targets = targets[train_indices]
+        test_inputs = inputs[test_indices, :]
 
-    testOutputs = predict(model, inputs); 
+        # Crear y entrenar el modelo según el tipo especificado
+        if modelType == :SVC
+            model = SVC(; modelHyperparameters...)
+        elseif modelType == :DecisionTreeClassifier
+            model = DecisionTreeClassifier(; modelHyperparameters...)
+        elseif modelType == :KNeighborsClassifier
+            model = KNeighborsClassifier(; modelHyperparameters...)
+        else
+            throw(ArgumentError("Model type not recognized"))
+        end
 
+        fit!(model, training_inputs, training_targets)
+
+        # Evaluar el modelo en el conjunto de prueba y guardar las métricas
+        test_outputs = predict(model, test_inputs)
+        metrics = confusionMatrix(test_outputs, targets[test_indices])
+        fold_accuracies[i] = metrics[1][1]  # Precisión (media)
+        fold_error_rates[i] = metrics[2][1]  # Tasa de error (media)
+        fold_sensitivities[i] = metrics[3]  # Sensibilidad (media, desviación típica)
+        fold_specificities[i] = metrics[4]  # Especificidad (media, desviación típica)
+        fold_VPPs[i] = metrics[5]  # VPP (media, desviación típica)
+        fold_VPNs[i] = metrics[6]  # VPN (media, desviación típica)
+        fold_f1_scores[i] = metrics[7]  # F1-score (media, desviación típica)
+        fold_conf_mat[i] = metrics[8]
+    end
+    
+    # Calcular la media y la desviación típica de las métricas de todos los folds
+    mean_accuracy = mean(fold_accuracies)
+    mean_error_rate = mean(fold_error_rates)
+    mean_sensitivity, std_sensitivity = mean_and_std([s[1] for s in fold_sensitivities])
+    mean_specificity, std_specificity = mean_and_std([s[1] for s in fold_specificities])
+    mean_VPP, std_VPP = mean_and_std([s[1] for s in fold_VPPs])
+    mean_VPN, std_VPN = mean_and_std([s[1] for s in fold_VPNs])
+    mean_f1_score, std_f1_score = mean_and_std([s[1] for s in fold_f1_scores])
+    
+    return (mean_accuracy, mean_error_rate, (mean_sensitivity, std_sensitivity), (mean_specificity, std_specificity), (mean_VPP, std_VPP), (mean_VPN, std_VPN), (mean_f1_score, std_f1_score), fold_conf_mat)
+end
+
+<<<<<<< HEAD
 end;
 
+=======
+>>>>>>> 1579ec6c45c2b18751d3d638f46fa651a87aa093
