@@ -701,7 +701,7 @@ function ANNCrossValidation(topology::AbstractArray{<:Int,1},
     targets = oneHotEncoding(targets)
 
     for fold in 1:nfolds
-        println(fold)
+        #println(fold)
 
         # a partir de matrices de entrada y 
         # salida deseada, índices de crossvalidation, número de fold. (4 variables)
@@ -738,15 +738,17 @@ function ANNCrossValidation(topology::AbstractArray{<:Int,1},
 
 
             else
-                raise
+                throw(DomainError("validationRatio argument not positive."))
+            end
             confusionMatrix() # empleando el conjunto de test. los resultados se almacenan en los vectores correspondientes.
+            
 
-            topology::AbstractArray{<:Int,1},
-    trainingDataset::  Tuple{AbstractArray{<:Real,2}, AbstractArray{Bool,1}};
-    validationDataset::Tuple{AbstractArray{<:Real,2}, AbstractArray{Bool,1}}=(Array{eltype(trainingDataset[1]),2}(undef,0,0), falses(0)),
-    testDataset::      Tuple{AbstractArray{<:Real,2}, AbstractArray{Bool,1}}=(Array{eltype(trainingDataset[1]),2}(undef,0,0), falses(0)),
-    transferFunctions::AbstractArray{<:Function,1}=fill(σ, length(topology)),
-    maxEpochs::Int=1000, minLoss::Real=0.0, learningRate::Real=0.01, maxEpochsVal::Int=20
+    #        topology::AbstractArray{<:Int,1},
+    #trainingDataset::  Tuple{AbstractArray{<:Real,2}, AbstractArray{Bool,1}};
+    #validationDataset::Tuple{AbstractArray{<:Real,2}, AbstractArray{Bool,1}}=(Array{eltype(trainingDataset[1]),2}(undef,0,0), falses(0)),
+    #testDataset::      Tuple{AbstractArray{<:Real,2}, AbstractArray{Bool,1}}=(Array{eltype(trainingDataset[1]),2}(undef,0,0), falses(0)),
+    #transferFunctions::AbstractArray{<:Function,1}=fill(σ, length(topology)),
+    #maxEpochs::Int=1000, minLoss::Real=0.0, learningRate::Real=0.01, maxEpochsVal::Int=20
 
 
         end
