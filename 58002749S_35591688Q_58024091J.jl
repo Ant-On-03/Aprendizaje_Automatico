@@ -675,10 +675,51 @@ function ANNCrossValidation(topology::AbstractArray{<:Int,1},
 
         # a partir de matrices de entrada y 
         # salida deseada, índices de crossvalidation, número de fold. (4 variables)
+        # ASIGNAR DATO EN BASE A SI COINCIDEN CON EL ÍNDICE DE FOLD O NO A CADA VECTOR 
+        # SE LO ASIGNAREMOS A TRAINING SI NO COINCIDE CON FOLD, A TEST SI SÍ COINCIDE CON FOLD.
         inputsTraining = []
         targetsTraining = []
         inputsTest = []
         targetsTest = []
+
+        for execution in numExecutions
+
+            if validationRatio == 0
+
+                # No me queda claro si tengo que modificar el formato de los inputs (si
+                # tienen que ir como vector de booleanos o con todos los datos, tanto 
+                # los targets (los booleanos) como las variables explicativas.)
+                trainingDataset = inputsTraining
+                testDataset = inputsTest
+
+                trainClassANN(topology, trainingDataset, testDataset=testDataset, transferFunctions=transferFunctions, maxEpochs=maxEpochs, minLoss=minLoss, learningRate=learningRate, maxEpochsVal=maxEpochsVal)
+
+
+            elseif validationRatio > 0
+
+                # CALCULAR EL PORCENTAJE PARA QUE DE LA LONGITUD DE LOS DATOS DE ENTRENAMIENTO, COJA EL NÚMERO IGUAL AL PORCENTAJE X DEL CONJUNTO TOTAL DE DATOS,
+                # DESPUÉS ASIGNAR A TRAINING Y VALIDATION SUS RESPECTIVOS ÍNDICES, LO QUE LES TOCA.
+                indicesEntreno, indicesValidation = holdOut(size(inputsTraining), )
+                trainingDataset
+                validationDataset
+                testDataset = inputsTest
+
+                trainClassANN(topology, trainingDataset, validationDataset=validationDataset, testDataset=testDataset, transferFunctions=transferFunctions, maxEpochs=maxEpochs, minLoss=minLoss, learningRate=learningRate, maxEpochsVal=maxEpochsVal)
+
+
+            else
+                raise
+            confusionMatrix() # empleando el conjunto de test. los resultados se almacenan en los vectores correspondientes.
+
+            topology::AbstractArray{<:Int,1},
+    trainingDataset::  Tuple{AbstractArray{<:Real,2}, AbstractArray{Bool,1}};
+    validationDataset::Tuple{AbstractArray{<:Real,2}, AbstractArray{Bool,1}}=(Array{eltype(trainingDataset[1]),2}(undef,0,0), falses(0)),
+    testDataset::      Tuple{AbstractArray{<:Real,2}, AbstractArray{Bool,1}}=(Array{eltype(trainingDataset[1]),2}(undef,0,0), falses(0)),
+    transferFunctions::AbstractArray{<:Function,1}=fill(σ, length(topology)),
+    maxEpochs::Int=1000, minLoss::Real=0.0, learningRate::Real=0.01, maxEpochsVal::Int=20
+
+
+        end
         
 
 
