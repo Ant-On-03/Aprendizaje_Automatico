@@ -789,12 +789,12 @@ function modelCrossValidation(modelType::Symbol, modelHyperparameters::Dict, inp
     
     # Iterar sobre las particiones de validación cruzada
     for i in 1:num_folds
-        # Dividir los datos en conjuntos de entrenamiento, validación y prueba utilizando holdOut
-        train_indices, test_indices, val_indices = holdOut(length(targets), 0.2, 0.1)
-        
-        training_inputs = inputs[train_indices, :]
-        training_targets = targets[train_indices]
-        test_inputs = inputs[test_indices, :]
+       # Dividir los datos en conjuntos de entrenamiento, validación y prueba utilizando holdOut
+       train_indices, test_indices, val_indices = holdOut(length(targets), 0.2, 0.1)
+       
+       training_inputs = inputs[train_indices, :]
+       training_targets = targets[train_indices]
+       test_inputs = inputs[test_indices, :]
 
         # Crear y entrenar el modelo según el tipo especificado
         if modelType == :SVC
@@ -809,33 +809,27 @@ function modelCrossValidation(modelType::Symbol, modelHyperparameters::Dict, inp
 
         fit!(model, training_inputs, training_targets)
 
-        # Evaluar el modelo en el conjunto de prueba y guardar las métricas
-        test_outputs = predict(model, test_inputs)
-        metrics = confusionMatrix(test_outputs, targets[test_indices])
-        fold_accuracies[i] = metrics[1][1]  # Precisión (media)
-        fold_error_rates[i] = metrics[2][1]  # Tasa de error (media)
-        fold_sensitivities[i] = metrics[3]  # Sensibilidad (media, desviación típica)
-        fold_specificities[i] = metrics[4]  # Especificidad (media, desviación típica)
-        fold_VPPs[i] = metrics[5]  # VPP (media, desviación típica)
-        fold_VPNs[i] = metrics[6]  # VPN (media, desviación típica)
-        fold_f1_scores[i] = metrics[7]  # F1-score (media, desviación típica)
-        fold_conf_mat[i] = metrics[8]
-    end
-    
-    # Calcular la media y la desviación típica de las métricas de todos los folds
-    mean_accuracy = mean(fold_accuracies)
-    mean_error_rate = mean(fold_error_rates)
-    mean_sensitivity, std_sensitivity = mean_and_std([s[1] for s in fold_sensitivities])
-    mean_specificity, std_specificity = mean_and_std([s[1] for s in fold_specificities])
-    mean_VPP, std_VPP = mean_and_std([s[1] for s in fold_VPPs])
-    mean_VPN, std_VPN = mean_and_std([s[1] for s in fold_VPNs])
-    mean_f1_score, std_f1_score = mean_and_std([s[1] for s in fold_f1_scores])
-    
-    return (mean_accuracy, mean_error_rate, (mean_sensitivity, std_sensitivity), (mean_specificity, std_specificity), (mean_VPP, std_VPP), (mean_VPN, std_VPN), (mean_f1_score, std_f1_score), fold_conf_mat)
+       # Evaluar el modelo en el conjunto de prueba y guardar las métricas
+       test_outputs = predict(model, test_inputs)
+       metrics = confusionMatrix(test_outputs, targets[test_indices])
+       fold_accuracies[i] = metrics[1][1]  # Precisión (media)
+       fold_error_rates[i] = metrics[2][1]  # Tasa de error (media)
+       fold_sensitivities[i] = metrics[3]  # Sensibilidad (media, desviación típica)
+       fold_specificities[i] = metrics[4]  # Especificidad (media, desviación típica)
+       fold_VPPs[i] = metrics[5]  # VPP (media, desviación típica)
+       fold_VPNs[i] = metrics[6]  # VPN (media, desviación típica)
+       fold_f1_scores[i] = metrics[7]  # F1-score (media, desviación típica)
+       fold_conf_mat[i] = metrics[8]
+   end
+   
+   # Calcular la media y la desviación típica de las métricas de todos los folds
+   mean_accuracy = mean(fold_accuracies)
+   mean_error_rate = mean(fold_error_rates)
+   mean_sensitivity, std_sensitivity = mean_and_std([s[1] for s in fold_sensitivities])
+   mean_specificity, std_specificity = mean_and_std([s[1] for s in fold_specificities])
+   mean_VPP, std_VPP = mean_and_std([s[1] for s in fold_VPPs])
+   mean_VPN, std_VPN = mean_and_std([s[1] for s in fold_VPNs])
+   mean_f1_score, std_f1_score = mean_and_std([s[1] for s in fold_f1_scores])
+   
+   return (mean_accuracy, mean_error_rate, (mean_sensitivity, std_sensitivity), (mean_specificity, std_specificity), (mean_VPP, std_VPP), (mean_VPN, std_VPN), (mean_f1_score, std_f1_score), fold_conf_mat)
 end
-
-<<<<<<< HEAD
-end;
-
-=======
->>>>>>> 1579ec6c45c2b18751d3d638f46fa651a87aa093
