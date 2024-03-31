@@ -294,19 +294,24 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
     maxEpochs::Int=1000, minLoss::Real=0.0, learningRate::Real=0.01, maxEpochsVal::Int=20)
    
     # Crear RNA
-    ann = buildClassANN(size(trainingDataset[1], 1), topology, size(trainingDataset[2], 1); transferFunctions=transferFunctions)
+    ann = buildClassANN(size(trainingDataset[1], 2), topology, size(trainingDataset[2], 2); transferFunctions=transferFunctions)
     losses_train = Float64[]
     losses_validation = Float64[]
     losses_test = Float64[]
 
     # Definir la función de pérdida
-    loss_function(ann, x,y) = (size(y,1) == 1) ? Losses.binarycrossentropy(ann(x),y) : Losses.crossentropy(ann(x),y);
+    loss(ann, x,y) = (size(y,1) == 1) ? Losses.binarycrossentropy(ann(x),y) : Losses.crossentropy(ann(x),y);
+    opt_state = Flux.setup(Adam(learningRate), ann)
 
-    loss_train = loss_function(ann, trainingDataset[1]', trainingDataset[2]')
+    inputs = trainingDataset[1]
+    targets = trainingDataset[2]
+
+    loss_train = loss(ann, trainingDataset[1]', trainingDataset[2]')
+
     push!(losses_train, loss_train)
 
     if !(isempty(validationDataset[1]) && isempty(validationDataset[2]))
-        loss_validation = loss_function(ann, validationDataset[1]', validationDataset[2]')
+        loss_validation = loss(ann, validationDataset[1]', validationDataset[2]')
         push!(losses_validation, loss_validation)
         
         best_loss_validation = loss_validation
@@ -314,7 +319,7 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
     end
 
     if !(isempty(testDataset[1]) && isempty(testDataset[2]))
-        loss_test = loss_function(ann, testDataset[1]', testDataset[2]')
+        loss_test = loss(ann, testDataset[1]', testDataset[2]')
         push!(losses_test, loss_test)
     end
 
@@ -324,21 +329,21 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
     for epoch in 1:maxEpochs
 
         # Entrenar un ciclo
-        Flux.train!(loss_function, Flux.params(ann), zip(eachrow(trainingDataset[1]), eachrow(trainingDataset[2])), ADAM(learningRate))
+        Flux.train!(loss, ann, [(trainingDataset[1]', trainingDataset[2]')], opt_state)
     
         # Calcular la pérdida en este ciclo para el conjunto de entrenamiento
-        loss_train = loss_function(ann, trainingDataset[1]', trainingDataset[2]')
+        loss_train = loss(ann, trainingDataset[1]', trainingDataset[2]')
         push!(losses_train, loss_train)
 
         if !(isempty(testDataset[1]) && isempty(testDataset[2]))
             # Calcular la pérdida en este ciclo para el conjunto de prueba
-            loss_test = loss_function(ann, testDataset[1]', testDataset[2]')
+            loss_test = loss(ann, testDataset[1]', testDataset[2]')
             push!(losses_test, loss_test)
         end
     
         if !(isempty(validationDataset[1]) && isempty(validationDataset[2]))
             # Calcular la pérdida en este ciclo para el conjunto de validación
-            loss_validation = loss_function(ann, validationDataset[1]', validationDataset[2]')
+            loss_validation = loss(ann, validationDataset[1]', validationDataset[2]')
             push!(losses_validation, loss_validation)
 
             counter = counter + 1
