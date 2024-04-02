@@ -758,19 +758,19 @@ function modelCrossValidation(modelType::Symbol, modelHyperparameters::Dict, inp
     fold_accuracies = Float64[]
     
     # Comprobar si se desea entrenar redes de neuronas
-    if modelType == :ANN & haskey(modelHyperparameters, :topology)
+    if modelType == :ANN && haskey(modelHyperparameters, :topology)
         # Llamar a ANNCrossValidation con los parámetros especificados
         return ANNCrossValidation(modelHyperparameters, inputs, targets, crossValidationIndices)
     end
     
     # Iterar sobre las particiones de validación cruzada
     for i in 1:num_folds
-       # Dividir los datos en conjuntos de entrenamiento, validación y prueba utilizando holdOut
-       train_indices, test_indices, val_indices = holdOut(length(targets), 0.2, 0.1)
+        # Dividir los datos en conjuntos de entrenamiento, validación y prueba utilizando holdOut
+        train_indices, test_indices, val_indices = holdOut(length(targets), 0.2, 0.1)
        
-       training_inputs = inputs[train_indices, :]
-       training_targets = targets[train_indices]
-       test_inputs = inputs[test_indices, :]
+        training_inputs = inputs[train_indices, :]
+        training_targets = targets[train_indices]
+        test_inputs = inputs[test_indices, :]
 
         # Crear y entrenar el modelo según el tipo especificado
         if modelType == :SVC
