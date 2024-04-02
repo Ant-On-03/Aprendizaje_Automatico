@@ -758,7 +758,7 @@ function modelCrossValidation(modelType::Symbol, modelHyperparameters::Dict, inp
     fold_accuracies = Float64[]
     
     # Comprobar si se desea entrenar redes de neuronas
-    if modelType == :ANN & haskey(modelHyperparameters, :topology)
+    if modelType == :ANN && haskey(modelHyperparameters, :topology)
         # Llamar a ANNCrossValidation con los parámetros especificados
         return ANNCrossValidation(modelHyperparameters, inputs, targets, crossValidationIndices)
     end
