@@ -757,6 +757,7 @@ using ScikitLearn: @sk_import, fit!, predict
 function modelCrossValidation(modelType::Symbol, modelHyperparameters::Dict, inputs::AbstractArray{<:Real,2}, targets::AbstractArray{<:Any,1}, crossValidationIndices::Array{Int64,1})
     num_folds = length(crossValidationIndices)
     fold_accuracies = Float64[]
+    targets = string.(targets)
     
     # Comprobar si se desea entrenar redes de neuronas
     if modelType == :ANN && haskey(modelHyperparameters, "topology")
