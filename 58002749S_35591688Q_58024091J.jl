@@ -784,18 +784,18 @@ function modelCrossValidation(modelType::Symbol, modelHyperparameters::Dict, inp
         training_targets = targets[train_indices]
         test_inputs = inputs[test_indices, :]
 
-            # Crear y entrenar el modelo según el tipo especificado
-            if modelType == :SVC
-                model = SVC(; modelHyperparameters...)
-            elseif modelType == :DecisionTreeClassifier
-                 model = DecisionTreeClassifier(random_state=1; modelHyperparameters...)
-            elseif modelType == :KNeighborsClassifier
-                model = KNeighborsClassifier(; modelHyperparameters...)
-            else
-                throw(ArgumentError("Model type not recognized"))
-            end
+        # Crear y entrenar el modelo según el tipo especificado
+        if modelType == :SVC
+            model = SVC(; modelHyperparameters...)
+        elseif modelType == :DecisionTreeClassifier
+                model = DecisionTreeClassifier(random_state=1; modelHyperparameters...)
+        elseif modelType == :KNeighborsClassifier
+            model = KNeighborsClassifier(; modelHyperparameters...)
+        else
+            throw(ArgumentError("Model type not recognized"))
+        end
 
-            fit!(model, training_inputs, training_targets)
+        fit!(model, training_inputs, training_targets)
 
         # Evaluar el modelo en el conjunto de prueba y guardar las métricas
         test_outputs = predict(model, test_inputs)
