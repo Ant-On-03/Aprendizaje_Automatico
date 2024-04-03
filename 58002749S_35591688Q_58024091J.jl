@@ -717,9 +717,10 @@ function ANNCrossValidation(topology::AbstractArray{<:Int,1},
                 validationRatioforTraining = validationRatio*nfolds / (nfolds-1)
                 indicesEntreno, indicesValidation = holdOut(size(inputsTraining, 1), validationRatioforTraining)
 
-                # Calculamos el dataset de training y validation.
+                # Calculamos el dataset de training y validation, usando los índices del holdOut.
                 trainingDataset = ( inputsTraining[indicesEntreno] , targetsTraining[indicesEntreno] )
                 validationDataset = (inputsTraining[indicesValidation] , targetsTraining[indicesValidation])
+                # calculamos el dataset de test.
                 testDataset = (inputsTest, targetsTest)
 
                 ann, _, _, _ = trainClassANN(topology, trainingDataset, validationDataset=validationDataset, testDataset=testDataset, transferFunctions=transferFunctions, maxEpochs=maxEpochs, minLoss=minLoss, learningRate=learningRate, maxEpochsVal=maxEpochsVal)
