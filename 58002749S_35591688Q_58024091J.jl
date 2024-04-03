@@ -810,9 +810,6 @@ function modelCrossValidation(modelType::Symbol, modelHyperparameters::Dict, inp
         push!(fold_conf_mat, metrics[8])
     end
 
-   end
-   
-
     # Calcular la media y desviación típica de la precisión y la tasa de error
 
     mean_accuracy = mean(fold_accuracies)
@@ -837,7 +834,6 @@ function modelCrossValidation(modelType::Symbol, modelHyperparameters::Dict, inp
 
     mean_f1_score = mean([s[1] for s in fold_f1_scores])
     std_f1_score = std([s[1] for s in fold_f1_scores])
-
 
    return ((mean_accuracy, std_accuracy),(mean_error_rate, std_error_rate),(mean_sensitivity, std_sensitivity),(mean_specificity, std_specificity),(mean_VPP, std_VPP),(mean_VPN, std_VPN),(mean_f1_score, std_f1_score))
 end
