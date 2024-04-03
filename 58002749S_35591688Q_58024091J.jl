@@ -767,21 +767,33 @@ using ScikitLearn: @sk_import, fit!, predict
 @sk_import neighbors: KNeighborsClassifier
 
 
+
 function modelCrossValidation(modelType::Symbol, modelHyperparameters::Dict, inputs::AbstractArray{<:Real,2}, targets::AbstractArray{<:Any,1}, crossValidationIndices::Array{Int64,1})
     num_folds = length(crossValidationIndices)
     fold_accuracies = Float64[]
+    targets = string.(targets)
     
     # Comprobar si se desea entrenar redes de neuronas
-    if modelType == :ANN && haskey(modelHyperparameters, :topology)
+    if modelType == :ANN && haskey(modelHyperparameters, "topology")
+
         # Llamar a ANNCrossValidation con los parámetros especificados
-        return ANNCrossValidation(modelHyperparameters, inputs, targets, crossValidationIndices)
+        return ANNCrossValidation(modelHyperparameters[:topology], inputs, targets, crossValidationIndices;
+        numExecutions = haskey(modelHyperparameters,"numExecutions") ? modelHyperparameters[:numExecutions] : 50,
+        transferFunctions = haskey(modelHyperparameters,"transferFunctions") ? modelHyperparameters[:transferFunctions] : fill(σ, length(topology)),
+        maxEpochs = haskey(modelHyperparameters,"maxEpochs") ? modelHyperparameters[:maxEpochs] : 1000,
+        minLoss = haskey(modelHyperparameters,"minLoss") ? modelHyperparameters[:minLoss] : 0.0,
+        learningRate = haskey(modelHyperparameters,"learningRate") ? modelHyperparameters[:learningRate] : 0.01,
+        validationRatio = haskey(modelHyperparameters, "validationRatio") ? modelHyperparameters[:validationRatio] : 0,
+        maxEpochsVal = haskey(modelHyperparameters, "maxEpochsVal") ? modelHyperparameters[:maxEpochsVal] : 20
+        )
+        
     end
     
     # Iterar sobre las particiones de validación cruzada
     for i in 1:num_folds
         # Dividir los datos en conjuntos de entrenamiento, validación y prueba utilizando holdOut
-        train_indices, test_indices, val_indices = holdOut(length(targets), 0.2, 0.1)
-       
+        train_indices, test_indices = holdOut(length(targets), 0.2)
+        
         training_inputs = inputs[train_indices, :]
         training_targets = targets[train_indices]
         test_inputs = inputs[test_indices, :]
@@ -790,7 +802,7 @@ function modelCrossValidation(modelType::Symbol, modelHyperparameters::Dict, inp
         if modelType == :SVC
             model = SVC(; modelHyperparameters...)
         elseif modelType == :DecisionTreeClassifier
-            model = DecisionTreeClassifier(; modelHyperparameters...)
+                model = DecisionTreeClassifier(random_state=1; modelHyperparameters...)
         elseif modelType == :KNeighborsClassifier
             model = KNeighborsClassifier(; modelHyperparameters...)
         else
@@ -799,27 +811,43 @@ function modelCrossValidation(modelType::Symbol, modelHyperparameters::Dict, inp
 
         fit!(model, training_inputs, training_targets)
 
-       # Evaluar el modelo en el conjunto de prueba y guardar las métricas
-       test_outputs = predict(model, test_inputs)
-       metrics = confusionMatrix(test_outputs, targets[test_indices])
-       fold_accuracies[i] = metrics[1][1]  # Precisión (media)
-       fold_error_rates[i] = metrics[2][1]  # Tasa de error (media)
-       fold_sensitivities[i] = metrics[3]  # Sensibilidad (media, desviación típica)
-       fold_specificities[i] = metrics[4]  # Especificidad (media, desviación típica)
-       fold_VPPs[i] = metrics[5]  # VPP (media, desviación típica)
-       fold_VPNs[i] = metrics[6]  # VPN (media, desviación típica)
-       fold_f1_scores[i] = metrics[7]  # F1-score (media, desviación típica)
-       fold_conf_mat[i] = metrics[8]
-   end
-   
-   # Calcular la media y la desviación típica de las métricas de todos los folds
-   mean_accuracy = mean(fold_accuracies)
-   mean_error_rate = mean(fold_error_rates)
-   mean_sensitivity, std_sensitivity = mean_and_std([s[1] for s in fold_sensitivities])
-   mean_specificity, std_specificity = mean_and_std([s[1] for s in fold_specificities])
-   mean_VPP, std_VPP = mean_and_std([s[1] for s in fold_VPPs])
-   mean_VPN, std_VPN = mean_and_std([s[1] for s in fold_VPNs])
-   mean_f1_score, std_f1_score = mean_and_std([s[1] for s in fold_f1_scores])
-   
-   return (mean_accuracy, mean_error_rate, (mean_sensitivity, std_sensitivity), (mean_specificity, std_specificity), (mean_VPP, std_VPP), (mean_VPN, std_VPN), (mean_f1_score, std_f1_score), fold_conf_mat)
+        # Evaluar el modelo en el conjunto de prueba y guardar las métricas
+        test_outputs = predict(model, test_inputs)
+        metrics = confusionMatrix(test_outputs, targets[test_indices])
+        push!(fold_accuracies, metrics[1])
+        push!(fold_error_rates, metrics[2])
+        push!(fold_sensitivities, metrics[3])
+        push!(fold_specificities, metrics[4])
+        push!(fold_VPPs, metrics[5])
+        push!(fold_VPNs, metrics[6])
+        push!(fold_f1_scores, metrics[7])
+        push!(fold_conf_mat, metrics[8])
+    end
+
+    # Calcular la media y desviación típica de la precisión y la tasa de error
+
+    mean_accuracy = mean(fold_accuracies)
+    std_accuracy = std(fold_accuracies)
+
+    mean_error_rate = mean(fold_error_rates)
+    std_error_rate = std(fold_error_rates)
+
+    #Calcula la mediay desviación típica de cada parámetro en cada fold
+
+    mean_sensitivity = mean([s[1] for s in fold_sensitivities])
+    std_sensitivity = std([s[1] for s in fold_sensitivities])
+
+    mean_specificity = mean([s[1] for s in fold_specificities])
+    std_specificity = std([s[1] for s in fold_specificities])
+
+    mean_VPP = mean([s[1] for s in fold_VPPs])
+    std_VPP = std([s[1] for s in fold_VPPs])
+
+    mean_VPN = mean([s[1] for s in fold_VPNs])
+    std_VPN = std([s[1] for s in fold_VPNs])
+
+    mean_f1_score = mean([s[1] for s in fold_f1_scores])
+    std_f1_score = std([s[1] for s in fold_f1_scores])
+
+   return ((mean_accuracy, std_accuracy),(mean_error_rate, std_error_rate),(mean_sensitivity, std_sensitivity),(mean_specificity, std_specificity),(mean_VPP, std_VPP),(mean_VPN, std_VPN),(mean_f1_score, std_f1_score))
 end
