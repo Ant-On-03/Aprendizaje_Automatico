@@ -789,7 +789,7 @@ function modelCrossValidation(modelType::Symbol, modelHyperparameters::Dict, inp
             elseif modelType == :DecisionTreeClassifier
                  model = DecisionTreeClassifier(random_state=1; modelHyperparameters...)
             elseif modelType == :KNeighborsClassifier
-                model = KNeighborsClassifier(modelHyperparameters...)
+                model = KNeighborsClassifier(; modelHyperparameters...)
             else
                 throw(ArgumentError("Model type not recognized"))
             end
