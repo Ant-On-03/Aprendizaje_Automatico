@@ -664,14 +664,14 @@ function ANNCrossValidation(topology::AbstractArray{<:Int,1},
     # cálculo del número de folds de k-fold (número de grupos)
     nfolds = maximum(crossValidationIndices)
 
-    # Inicializar vectores de métricas a tomar.
-    precision = []
-    tasaerror = []
-    sensibilidad = []
-    especificidad = []
-    VPP = []
-    VPN = []
-    F1 = []
+    # Inicializar vectores de métricas a tomar. 
+    accuracyFold = Vector{Int}(undef, nfolds)
+    errorRateFold =  Vector{Float}(undef, nfolds)
+    sensitivityFold =  Vector{Float}(undef, nfolds)
+    specificityFold =  Vector{Float}(undef, nfolds)
+    VPP_Fold =  Vector{Float}(undef, nfolds)
+    VPN_Fold =  Vector{Float}(undef, nfolds)
+    F1_Fold =  Vector{Float}(undef, nfolds)
 
     # oneHotEncodings
     targets = oneHotEncoding(targets)
@@ -679,67 +679,81 @@ function ANNCrossValidation(topology::AbstractArray{<:Int,1},
     for fold in 1:nfolds
         #println(fold)
 
-        # a partir de matrices de entrada y 
-        # salida deseada, índices de crossvalidation, número de fold. (4 variables)
-        # ASIGNAR DATO EN BASE A SI COINCIDEN CON EL ÍNDICE DE FOLD O NO A CADA VECTOR 
-        # SE LO ASIGNAREMOS A TRAINING SI NO COINCIDE CON FOLD, A TEST SI SÍ COINCIDE CON FOLD.
-        inputsTraining = []
-        targetsTraining = []
-        inputsTest = []
-        targetsTest = []
+        # CÓMO CREO QUE ESTÁ BIEN
+        inputsTraining = inputs[cros6sValidationIndices .!= fold, :]
+        targetsTraining = targets[crossValidationIndices .!= fold, :] # esto podría no funcionar si targets tiene más de 1 argumento (si tras el onehotencodiing el atributo se convierte en 3 o más booleanos).
+        inputsTest = inputs[crossValidationIndices .== fold, :]
+        targetsTest = targets[crossValidationIndices .== fold, :] # tras onehotencoding esto podría ser vector o matriz.
+
+        # AQUÍ INICIALIZA accExec, errorRateExec, recallExec
+        accuracyEx =Vector{Float}(undef, numExecutions)
+        errorRateEx = Vector{Float}(undef, numExecutions)
+        sensitivityEx = Vector{Float}(undef, numExecutions)
+        specificityEx = Vector{Float}(undef, numExecutions)
+        VPP_Ex = Vector{Float}(undef, numExecutions)
+        VPN_Ex = Vector{Float}(undef, numExecutions)
+        F1_Ex = Vector{Float}(undef, numExecutions)
 
         for execution in numExecutions
 
             if validationRatio == 0
+                # SI NO HAY VALIDATION DATASET.
+                trainingDataset = (inputsTraining, targetsTraining)
+                testDataset = (inputsTest, targetsTest)
 
-                # No me queda claro si tengo que modificar el formato de los inputs (si
-                # tienen que ir como vector de booleanos o con todos los datos, tanto 
-                # los targets (los booleanos) como las variables explicativas.)
-                trainingDataset = inputsTraining
-                testDataset = inputsTest
-
-                trainClassANN(topology, trainingDataset, testDataset=testDataset, transferFunctions=transferFunctions, maxEpochs=maxEpochs, minLoss=minLoss, learningRate=learningRate, maxEpochsVal=maxEpochsVal)
+                ann, _, _, _ = trainClassANN(topology, trainingDataset, testDataset=testDataset, transferFunctions=transferFunctions, maxEpochs=maxEpochs, minLoss=minLoss, learningRate=learningRate, maxEpochsVal=maxEpochsVal)
 
 
             elseif validationRatio > 0
 
                 # CALCULAR EL PORCENTAJE PARA QUE DE LA LONGITUD DE LOS DATOS DE ENTRENAMIENTO, COJA EL NÚMERO IGUAL AL PORCENTAJE X DEL CONJUNTO TOTAL DE DATOS,
                 # DESPUÉS ASIGNAR A TRAINING Y VALIDATION SUS RESPECTIVOS ÍNDICES, LO QUE LES TOCA.
-                indicesEntreno, indicesValidation = holdOut(size(inputsTraining), )
-                trainingDataset
-                validationDataset
-                testDataset = inputsTest
+                # el porcentaje de trainingDataset que tiene n datos
+                # si sabemos que trainingDataset es el (nfolds-1) / nfolds porcentaje del total.
+                # por ello el a porciento de trainingdataset es el a*(nfolds-1)/nfolds porciento del total
+                # la ecuacón es a*(nfolds-1)/nfolds = validationRatio
+                # con lo cual a = validationRatio / ((nfolds-1)/nfolds) = validationRatio*nfolds / (nfolds-1)
+                
+                validationRatioforTraining = validationRatio*nfolds / (nfolds-1)
+                indicesEntreno, indicesValidation = holdOut(size(inputsTraining, 1), validationRatioforTraining)
 
-                trainClassANN(topology, trainingDataset, validationDataset=validationDataset, testDataset=testDataset, transferFunctions=transferFunctions, maxEpochs=maxEpochs, minLoss=minLoss, learningRate=learningRate, maxEpochsVal=maxEpochsVal)
+                # Calculamos el dataset de training y validation.
+                trainingDataset = ( inputsTraining[indicesEntreno] , targetsTraining[indicesEntreno] )
+                validationDataset = (inputsTraining[indicesValidation] , targetsTraining[indicesValidation])
+                testDataset = (inputsTest, targetsTest)
 
+                ann, _, _, _ = trainClassANN(topology, trainingDataset, validationDataset=validationDataset, testDataset=testDataset, transferFunctions=transferFunctions, maxEpochs=maxEpochs, minLoss=minLoss, learningRate=learningRate, maxEpochsVal=maxEpochsVal)
 
             else
                 throw(DomainError("validationRatio argument not positive."))
             end
-            confusionMatrix() # empleando el conjunto de test. los resultados se almacenan en los vectores correspondientes.
             
-
-    #        topology::AbstractArray{<:Int,1},
-    #trainingDataset::  Tuple{AbstractArray{<:Real,2}, AbstractArray{Bool,1}};
-    #validationDataset::Tuple{AbstractArray{<:Real,2}, AbstractArray{Bool,1}}=(Array{eltype(trainingDataset[1]),2}(undef,0,0), falses(0)),
-    #testDataset::      Tuple{AbstractArray{<:Real,2}, AbstractArray{Bool,1}}=(Array{eltype(trainingDataset[1]),2}(undef,0,0), falses(0)),
-    #transferFunctions::AbstractArray{<:Function,1}=fill(σ, length(topology)),
-    #maxEpochs::Int=1000, minLoss::Real=0.0, learningRate::Real=0.01, maxEpochsVal::Int=20
-
-
+            
+            # AQUÍ IGUAL LE CORRESPONDE IN IF PARA ER SI HAY QUE TRASPONER O NO ann(inputsTest') por si era matriz o vector???
+            (acc, errorRate, sensitivity, specificity, VPP, VPN, F1, _) =  confusionMatrix(ann(inputsTest')', targetsTest ) # empleando el conjunto de test. los resultados se almacenan en los vectores correspondientes.
+            
+            precisionEx[execution] = acc
+            errorRateEx[execution] = errorRate
+            sensitivityEx[execution] = sensitivity
+            specificityEx[execution] = specificity
+            VPP_Ex[execution] = VPP
+            VPN_Ex[execution] = VPN
+            F1_Ex[execution] = F1
         end
+
+        accuracyFold[fold] = mean(precisionEx)
+        errorRateFold[fold] = mean(errorRateEx)
+        sensitivityFold[fold] = mean(sensitivityEx)
+        specificityFold[fold] = mean(specificityEx)
+        VPP_Fold[fold] = mean(VPP_Ex)
+        VPN_Fold[fold] = mean(VPN_Ex)
+        F1_Fold[fold] = mean(F1_Ex)
         
-
-
-
-
-
-
-    end
-
-
-
+    end 
+    # creo que ya la he hecho bien ANNCrossvalidation puedo echarle un vistazo? ratio*(1-1/numfolds)
+    return ( (mean(accuracyFold),std(accuracyFold)), (mean(errorRateFold),std(errorRateFold)), (mean(sensitivityFold),std(sensitivityFold)), (mean(specificityFold),std(specificityFold)), (mean(VPP_Fold),std(VPP_Fold)), (mean(VPN_Fold),std(VPN_Fold)), (mean(F1_Fold),std(F1_Fold)) )
 end;
+
 
 
 # ----------------------------------------------------------------------------------------------
