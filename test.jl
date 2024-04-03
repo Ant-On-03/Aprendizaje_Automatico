@@ -6,6 +6,9 @@ using Flux;
 
 include("58002749S_35591688Q_58024091J.jl")
 
+confusionMatrix([true false false; false false true; false false false], [false false true; true false false; false false false])
+
+println(trainClassANN([3, 4, 2], ([1 2; 3 4; 5 6], [true false; false true; true false]), testDataset = ([1 2; 3 4; 5 6], [true false; false true; true false]), maxEpochs = 50))
 
 # Leer los datos y definir targets
 dataset = readdlm("iris.data", ',')
