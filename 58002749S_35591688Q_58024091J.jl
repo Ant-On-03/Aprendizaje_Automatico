@@ -808,6 +808,7 @@ function modelCrossValidation(modelType::Symbol, modelHyperparameters::Dict, inp
         push!(fold_VPNs, metrics[6])
         push!(fold_f1_scores, metrics[7])
         push!(fold_conf_mat, metrics[8])
+    end
 
    end
    
