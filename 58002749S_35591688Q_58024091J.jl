@@ -752,7 +752,7 @@ function ANNCrossValidation(topology::AbstractArray{<:Int,1},
         
     end 
     # creo que ya la he hecho bien ANNCrossvalidation puedo echarle un vistazo? ratio*(1-1/numfolds)
-    return ( (mean(accuracyFold),std(accuracyFold)), (mean(errorRateFold),std(errorRateFold)), (mean(sensitivityFold),std(sensitivityFold)), (mean(specificityFold),std(specificityFold)), (mean(VPP_Fold),std(VPP_Fold)), (mean(VPN_Fold),std(VPN_Fold)), (mean(F1_Fold),std(F1_Fold)) )
+    return ((mean(accuracyFold),std(accuracyFold)), (mean(errorRateFold),std(errorRateFold)), (mean(sensitivityFold), std(sensitivityFold)), (mean(specificityFold),std(specificityFold)), (mean(VPP_Fold),std(VPP_Fold)), (mean(VPN_Fold),std(VPN_Fold)), (mean(F1_Fold),std(F1_Fold)))
 end;
 
 
@@ -792,7 +792,7 @@ function modelCrossValidation(modelType::Symbol, modelHyperparameters::Dict, inp
     
     # Iterar sobre las particiones de validación cruzada
     for i in 1:num_folds
-        # Dividir los datos en conjuntos de entrenamiento, validación y prueba utilizando holdOut
+        # Dividir los datos en conjuntos de entrenamiento y prueba utilizando holdOut
         train_indices, test_indices = holdOut(length(targets), 0.2)
         
         training_inputs = inputs[train_indices, :]
