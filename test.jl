@@ -31,18 +31,19 @@ targets = dataset[:, 5];
  
  
  
-#modelHyperparameters = Dict("C" => 1, "kernel" => "rbf", "gamma" => 2, "degree" => 3, "coef0" =>0.0);
+modelHyperparameters = Dict("C" => 1, "kernel" => "rbf", "gamma" => 2, "degree" => 3, "coef0" =>0.0);
  
-modelHyperparameters = Dict(:max_depth => 3);
+#modelHyperparameters = Dict("max_depth" => 3);
  
 #modelHyperparameters = Dict("n_neighbors" => 3);
+
+#modelHyperparameters = Dict("topology" => [5,3], "learningRate" => 0.01,"validationRatio" => 0.2, "numExecutions" => 50, "maxEpochs" => 1000,"maxEpochsVal" => 6);
  
 crossValidationIndices = [2, 1, 2, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 3, 2, 3, 3, 2, 2, 3, 1, 3, 2, 3, 3, 3, 3, 3, 3, 3, 1, 1, 2, 2, 3, 2, 3, 2, 3, 2, 3, 2, 2, 2, 3, 3, 3, 3, 3, 2, 1, 3, 1, 1, 1, 1, 1, 1, 2, 2, 1, 1, 1, 1, 3, 1, 2, 2, 2, 2, 2, 2, 1, 3, 1, 3, 1, 1, 1, 1, 3, 2, 2, 1, 1, 2, 1, 1, 2, 2, 1, 1, 2, 3, 2, 3, 2, 2, 3, 2, 3, 3, 1, 3, 2, 2, 3, 3, 3, 3, 3, 2, 2, 3, 1, 1, 1, 2, 1, 3, 2, 2, 1, 3, 3, 1, 3, 2, 3, 3, 1, 2, 1, 3, 3, 2, 2, 2, 2, 3, 1, 2, 1, 1, 1, 2, 2, 3, 3, 3]
- 
- 
-ANNCrossValidation([10, 5, 3], inputs, targets, crossValidationIndices; validationRatio=0.2)
-modelCrossValidation(:DecisionTreeClassifier, modelHyperparameters,inputs,targets,crossValidationIndices)
 
+
+ANNCrossValidation([10, 5, 3], inputs, targets, crossValidationIndices; validationRatio=0.2)
+modelCrossValidation(:SVC, modelHyperparameters,inputs,targets,crossValidationIndices)
 
 
 

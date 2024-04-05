@@ -794,17 +794,17 @@ function modelCrossValidation(modelType::Symbol, modelHyperparameters::Dict, inp
     targets = string.(targets)
     
     # Comprobar si se desea entrenar redes de neuronas
-    if modelType == :ANN && haskey(modelHyperparameters, "topology")
+    if modelType == :ANN 
 
         # Llamar a ANNCrossValidation con los parámetros especificados
-        return ANNCrossValidation(modelHyperparameters[:topology], inputs, targets, crossValidationIndices;
-        numExecutions = haskey(modelHyperparameters,"numExecutions") ? modelHyperparameters[:numExecutions] : 50,
-        transferFunctions = haskey(modelHyperparameters,"transferFunctions") ? modelHyperparameters[:transferFunctions] : fill(σ, length(modelHyperparameters[:topology])),
-        maxEpochs = haskey(modelHyperparameters,"maxEpochs") ? modelHyperparameters[:maxEpochs] : 1000,
-        minLoss = haskey(modelHyperparameters,"minLoss") ? modelHyperparameters[:minLoss] : 0.0,
-        learningRate = haskey(modelHyperparameters,"learningRate") ? modelHyperparameters[:learningRate] : 0.01,
-        validationRatio = haskey(modelHyperparameters, "validationRatio") ? modelHyperparameters[:validationRatio] : 0,
-        maxEpochsVal = haskey(modelHyperparameters, "maxEpochsVal") ? modelHyperparameters[:maxEpochsVal] : 20
+        return ANNCrossValidation(modelHyperparameters["topology"], inputs, targets, crossValidationIndices;
+        numExecutions = haskey(modelHyperparameters,"numExecutions") ? modelHyperparameters["numExecutions"] : 50,
+        transferFunctions = haskey(modelHyperparameters,"transferFunctions") ? modelHyperparameters["transferFunctions"] : fill(σ, length(modelHyperparameters["topology"])),
+        maxEpochs = haskey(modelHyperparameters,"maxEpochs") ? modelHyperparameters["maxEpochs"] : 1000,
+        minLoss = haskey(modelHyperparameters,"minLoss") ? modelHyperparameters["minLoss"] : 0.0,
+        learningRate = haskey(modelHyperparameters,"learningRate") ? modelHyperparameters["learningRate"] : 0.01,
+        validationRatio = haskey(modelHyperparameters, "validationRatio") ? modelHyperparameters["validationRatio"] : 0,
+        maxEpochsVal = haskey(modelHyperparameters, "maxEpochsVal") ? modelHyperparameters["maxEpochsVal"] : 20
         )
         
     end
@@ -820,11 +820,22 @@ function modelCrossValidation(modelType::Symbol, modelHyperparameters::Dict, inp
 
         # Crear y entrenar el modelo según el tipo especificado
         if modelType == :SVC
-            model = SVC(; modelHyperparameters...)
+
+            model = SVC(; 
+                    C = haskey(modelHyperparameters, "C") ? modelHyperparameters["C"] : 1.0,
+                    kernel = haskey(modelHyperparameters, "kernel") ? modelHyperparameters["kernel"] : "rbf",
+                    degree = haskey(modelHyperparameters, "degree") ? modelHyperparameters["degree"] : 3,
+                    gamma = haskey(modelHyperparameters, "gamma") ? modelHyperparameters["gamma"] : "scale",
+                    coef0 = haskey(modelHyperparameters, "coef0") ? modelHyperparameters["coef0"] : 0.0
+                )
+
+
         elseif modelType == :DecisionTreeClassifier
-                model = DecisionTreeClassifier(random_state=1; modelHyperparameters...)
+                model = DecisionTreeClassifier(random_state=1; max_depth = modelHyperparameters["max_depth"] )
+
         elseif modelType == :KNeighborsClassifier
-            model = KNeighborsClassifier(; modelHyperparameters...)
+            model = KNeighborsClassifier(; n_neighbors = modelHyperparameters["n_neighbors"] )
+            
         else
             throw(ArgumentError("Model type not recognized"))
         end
@@ -854,20 +865,20 @@ function modelCrossValidation(modelType::Symbol, modelHyperparameters::Dict, inp
 
     #Calcula la mediay desviación típica de cada parámetro en cada fold
 
-    mean_sensitivity = mean([s[1] for s in fold_sensitivities])
-    std_sensitivity = std([s[1] for s in fold_sensitivities])
+    mean_sensitivity = mean(fold_sensitivities) # [mean(s) for s in fold_sensitivities]
+    std_sensitivity = std(fold_sensitivities)
 
-    mean_specificity = mean([s[1] for s in fold_specificities])
-    std_specificity = std([s[1] for s in fold_specificities])
+    mean_specificity = mean(fold_specificities)
+    std_specificity = std(fold_specificities)
 
-    mean_VPP = mean([s[1] for s in fold_VPPs])
-    std_VPP = std([s[1] for s in fold_VPPs])
+    mean_VPP = mean(fold_VPPs)
+    std_VPP = std(fold_VPPs)
 
-    mean_VPN = mean([s[1] for s in fold_VPNs])
-    std_VPN = std([s[1] for s in fold_VPNs])
+    mean_VPN = mean(fold_VPNs)
+    std_VPN = std(fold_VPNs)
 
-    mean_f1_score = mean([s[1] for s in fold_f1_scores])
-    std_f1_score = std([s[1] for s in fold_f1_scores])
+    mean_f1_score = mean(fold_f1_scores)
+    std_f1_score = std(fold_f1_scores)
 
    return ((mean_accuracy, std_accuracy),(mean_error_rate, std_error_rate),(mean_sensitivity, std_sensitivity),(mean_specificity, std_specificity),(mean_VPP, std_VPP),(mean_VPN, std_VPN),(mean_f1_score, std_f1_score))
 end
