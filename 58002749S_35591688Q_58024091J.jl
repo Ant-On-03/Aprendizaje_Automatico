@@ -812,7 +812,7 @@ function modelCrossValidation(modelType::Symbol, modelHyperparameters::Dict, inp
 
     targets = string.(targets)
     # Iterar sobre las particiones de validación cruzada
-    for i in 1:num_folds
+    for fold in 1:num_folds
         # Dividir los datos en conjuntos de entrenamiento y prueba utilizando holdOut
 
        
