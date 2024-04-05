@@ -780,8 +780,17 @@ using ScikitLearn: @sk_import, fit!, predict
 
 
 function modelCrossValidation(modelType::Symbol, modelHyperparameters::Dict, inputs::AbstractArray{<:Real,2}, targets::AbstractArray{<:Any,1}, crossValidationIndices::Array{Int64,1})
+    
     num_folds = length(crossValidationIndices)
     fold_accuracies = Float64[]
+    fold_error_rates = Float64[]
+    fold_sensitivities = Float64[]
+    fold_specificities = Float64[]
+    fold_VPPs = Float64[]
+    fold_VPNs = Float64[]
+    fold_f1_scores = Float64[]
+
+    fold_conf_mat = Any[]
     targets = string.(targets)
     
     # Comprobar si se desea entrenar redes de neuronas
@@ -862,3 +871,4 @@ function modelCrossValidation(modelType::Symbol, modelHyperparameters::Dict, inp
 
    return ((mean_accuracy, std_accuracy),(mean_error_rate, std_error_rate),(mean_sensitivity, std_sensitivity),(mean_specificity, std_specificity),(mean_VPP, std_VPP),(mean_VPN, std_VPN),(mean_f1_score, std_f1_score))
 end
+

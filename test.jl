@@ -14,7 +14,7 @@ inputs = convert(Matrix{Float64}, dataset[:, 1:4])  # Asegurar que los datos de 
 targets = convert(Vector{String}, dataset[:, 5])    # Asegurar que los objetivos son de tipo String
 
 
-modelHyperparameters1 = Dict("C" => 1, "kernel" => "rbf", "gamma" => 2);
+modelHyperparameters1 = Dict(:C => 1, "kernel" => "rbf", "gamma" => 2);
 num_folds = 3  # Por ejemplo, usar validación cruzada con 5 folds
 crossValidationIndices = [0, 1, 5, 8, 2, 7, 9, 3, 4, 6]
 modelCrossValidation(:KNeighborsClassifier,modelHyperparameters1,inputs, targets, crossValidationIndices)
@@ -33,7 +33,7 @@ targets = dataset[:, 5];
  
 #modelHyperparameters = Dict("C" => 1, "kernel" => "rbf", "gamma" => 2, "degree" => 3, "coef0" =>0.0);
  
-modelHyperparameters = Dict("max_depth" => 3);
+modelHyperparameters = Dict(:max_depth => 3);
  
 #modelHyperparameters = Dict("n_neighbors" => 3);
  
