@@ -716,7 +716,7 @@ function ANNCrossValidation(topology::AbstractArray{<:Int,1},
                 # la ecuacón es a*(nfolds-1)/nfolds = validationRatio
                 # con lo cual a = validationRatio / ((nfolds-1)/nfolds) = validationRatio*nfolds / (nfolds-1)
                 
-                validationRatioforTraining = validationRatio*(nfolds) / (nfolds-1)
+                validationRatioforTraining = validationRatio * size(inputsTraining, 1) / size(inputs, 1) # validationRatio*(nfolds) / (nfolds-1)
                 indicesEntreno, indicesValidation = holdOut(size(inputsTraining, 1), validationRatioforTraining)
 
                 # Calculamos el dataset de training y validation, usando los índices del holdOut.
@@ -791,7 +791,8 @@ function modelCrossValidation(modelType::Symbol, modelHyperparameters::Dict, inp
     fold_f1_scores = Float64[]
 
     fold_conf_mat = Any[]
-    targets = string.(targets)
+    
+    
     
     # Comprobar si se desea entrenar redes de neuronas
     if modelType == :ANN 
@@ -808,15 +809,21 @@ function modelCrossValidation(modelType::Symbol, modelHyperparameters::Dict, inp
         )
         
     end
-    
+
+    targets = string.(targets)
     # Iterar sobre las particiones de validación cruzada
     for i in 1:num_folds
         # Dividir los datos en conjuntos de entrenamiento y prueba utilizando holdOut
-        train_indices, test_indices = holdOut(length(targets), 0.2)
+
+       
+
+
+        training_inputs = inputs[crossValidationIndices .!= fold, :]
+        training_targets = targets[crossValidationIndices .!= fold, :] # esto podría no funcionar si targets tiene más de 1 argumento (si tras el onehotencodiing el atributo se convierte en 3 o más booleanos).
+        test_inputs = inputs[crossValidationIndices .== fold, :]
+        test_targets = targets[crossValidationIndices .== fold, :] #
         
-        training_inputs = inputs[train_indices, :]
-        training_targets = targets[train_indices]
-        test_inputs = inputs[test_indices, :]
+        
 
         # Crear y entrenar el modelo según el tipo especificado
         if modelType == :SVC
@@ -844,7 +851,8 @@ function modelCrossValidation(modelType::Symbol, modelHyperparameters::Dict, inp
 
         # Evaluar el modelo en el conjunto de prueba y guardar las métricas
         test_outputs = predict(model, test_inputs)
-        metrics = confusionMatrix(test_outputs, targets[test_indices])
+        metrics = confusionMatrix(test_outputs, test_targets)
+
         push!(fold_accuracies, metrics[1])
         push!(fold_error_rates, metrics[2])
         push!(fold_sensitivities, metrics[3])
