@@ -781,7 +781,7 @@ using ScikitLearn: @sk_import, fit!, predict
 
 function modelCrossValidation(modelType::Symbol, modelHyperparameters::Dict, inputs::AbstractArray{<:Real,2}, targets::AbstractArray{<:Any,1}, crossValidationIndices::Array{Int64,1})
     
-    num_folds = length(crossValidationIndices)
+    num_folds = maximum(crossValidationIndices)
     fold_accuracies = Float64[]
     fold_error_rates = Float64[]
     fold_sensitivities = Float64[]
@@ -815,39 +815,35 @@ function modelCrossValidation(modelType::Symbol, modelHyperparameters::Dict, inp
     for fold in 1:num_folds
         # Dividir los datos en conjuntos de entrenamiento y prueba utilizando holdOut
 
-       
-
-
         training_inputs = inputs[crossValidationIndices .!= fold, :]
-        training_targets = targets[crossValidationIndices .!= fold, :] # esto podría no funcionar si targets tiene más de 1 argumento (si tras el onehotencodiing el atributo se convierte en 3 o más booleanos).
+        training_targets = targets[crossValidationIndices .!= fold] # esto podría no funcionar si targets tiene más de 1 argumento (si tras el onehotencodiing el atributo se convierte en 3 o más booleanos).
         test_inputs = inputs[crossValidationIndices .== fold, :]
-        test_targets = targets[crossValidationIndices .== fold, :] #
+        test_targets = targets[crossValidationIndices .== fold] #
         
         
 
         # Crear y entrenar el modelo según el tipo especificado
         if modelType == :SVC
 
-            model = SVC(; 
-                    C = haskey(modelHyperparameters, "C") ? modelHyperparameters["C"] : 1.0,
-                    kernel = haskey(modelHyperparameters, "kernel") ? modelHyperparameters["kernel"] : "rbf",
-                    degree = haskey(modelHyperparameters, "degree") ? modelHyperparameters["degree"] : 3,
-                    gamma = haskey(modelHyperparameters, "gamma") ? modelHyperparameters["gamma"] : "scale",
-                    coef0 = haskey(modelHyperparameters, "coef0") ? modelHyperparameters["coef0"] : 0.0
+            model = SVC(
+                    C = modelHyperparameters["C"], kernel = modelHyperparameters["kernel"], degree = modelHyperparameters["degree"],
+                    gamma = modelHyperparameters["gamma"],
+                    coef0 = modelHyperparameters["coef0"]
                 )
 
 
         elseif modelType == :DecisionTreeClassifier
-                model = DecisionTreeClassifier(random_state=1; max_depth = modelHyperparameters["max_depth"] )
+            model = DecisionTreeClassifier(random_state=1; max_depth = modelHyperparameters["max_depth"] )
 
         elseif modelType == :KNeighborsClassifier
-            model = KNeighborsClassifier(; n_neighbors = modelHyperparameters["n_neighbors"] )
+            model = KNeighborsClassifier(n_neighbors = modelHyperparameters["n_neighbors"] )
             
         else
             throw(ArgumentError("Model type not recognized"))
         end
 
         fit!(model, training_inputs, training_targets)
+        println(test_inputs)
 
         # Evaluar el modelo en el conjunto de prueba y guardar las métricas
         test_outputs = predict(model, test_inputs)
