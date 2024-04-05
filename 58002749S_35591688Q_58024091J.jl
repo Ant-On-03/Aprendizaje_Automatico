@@ -790,7 +790,7 @@ function modelCrossValidation(modelType::Symbol, modelHyperparameters::Dict, inp
         # Llamar a ANNCrossValidation con los parámetros especificados
         return ANNCrossValidation(modelHyperparameters[:topology], inputs, targets, crossValidationIndices;
         numExecutions = haskey(modelHyperparameters,"numExecutions") ? modelHyperparameters[:numExecutions] : 50,
-        transferFunctions = haskey(modelHyperparameters,"transferFunctions") ? modelHyperparameters[:transferFunctions] : fill(σ, length(topology)),
+        transferFunctions = haskey(modelHyperparameters,"transferFunctions") ? modelHyperparameters[:transferFunctions] : fill(σ, length(modelHyperparameters[:topology])),
         maxEpochs = haskey(modelHyperparameters,"maxEpochs") ? modelHyperparameters[:maxEpochs] : 1000,
         minLoss = haskey(modelHyperparameters,"minLoss") ? modelHyperparameters[:minLoss] : 0.0,
         learningRate = haskey(modelHyperparameters,"learningRate") ? modelHyperparameters[:learningRate] : 0.01,

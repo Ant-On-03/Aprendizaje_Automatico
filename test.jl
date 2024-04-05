@@ -6,6 +6,48 @@ using Flux;
 
 include("58002749S_35591688Q_58024091J.jl")
 
+
+dataset = readdlm("datasets/iris.data", ',')
+
+# Extraer los datos de entrada (features) y los objetivos (targets)
+inputs = convert(Matrix{Float64}, dataset[:, 1:4])  # Asegurar que los datos de entrada son de tipo Float64
+targets = convert(Vector{String}, dataset[:, 5])    # Asegurar que los objetivos son de tipo String
+
+
+modelHyperparameters1 = Dict("C" => 1, "kernel" => "rbf", "gamma" => 2);
+num_folds = 3  # Por ejemplo, usar validación cruzada con 5 folds
+crossValidationIndices = [0, 1, 5, 8, 2, 7, 9, 3, 4, 6]
+modelCrossValidation(:KNeighborsClassifier,modelHyperparameters1,inputs, targets, crossValidationIndices)
+################################################
+using Random
+using DelimitedFiles;
+using Statistics
+Random.seed!(123)
+
+dataset = readdlm("datasets/iris.data", ',');
+inputs = dataset[:, 1:4];
+inputs = Float32.(inputs);
+targets = dataset[:, 5];
+ 
+ 
+ 
+#modelHyperparameters = Dict("C" => 1, "kernel" => "rbf", "gamma" => 2, "degree" => 3, "coef0" =>0.0);
+ 
+modelHyperparameters = Dict("max_depth" => 3);
+ 
+#modelHyperparameters = Dict("n_neighbors" => 3);
+ 
+crossValidationIndices = [2, 1, 2, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 3, 2, 3, 3, 2, 2, 3, 1, 3, 2, 3, 3, 3, 3, 3, 3, 3, 1, 1, 2, 2, 3, 2, 3, 2, 3, 2, 3, 2, 2, 2, 3, 3, 3, 3, 3, 2, 1, 3, 1, 1, 1, 1, 1, 1, 2, 2, 1, 1, 1, 1, 3, 1, 2, 2, 2, 2, 2, 2, 1, 3, 1, 3, 1, 1, 1, 1, 3, 2, 2, 1, 1, 2, 1, 1, 2, 2, 1, 1, 2, 3, 2, 3, 2, 2, 3, 2, 3, 3, 1, 3, 2, 2, 3, 3, 3, 3, 3, 2, 2, 3, 1, 1, 1, 2, 1, 3, 2, 2, 1, 3, 3, 1, 3, 2, 3, 3, 1, 2, 1, 3, 3, 2, 2, 2, 2, 3, 1, 2, 1, 1, 1, 2, 2, 3, 3, 3]
+ 
+ 
+ANNCrossValidation([10, 5, 3], inputs, targets, crossValidationIndices; validationRatio=0.2)
+modelCrossValidation(:DecisionTreeClassifier, modelHyperparameters,inputs,targets,crossValidationIndices)
+
+
+
+
+
+
 confusionMatrix([true false false; false false true; false false false], [false false true; true false false; false false false])
 
 println(trainClassANN([3, 4, 2], ([1 2; 3 4; 5 6], [true false; false true; true false]), testDataset = ([1 2; 3 4; 5 6], [true false; false true; true false]), maxEpochs = 50))
