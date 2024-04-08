@@ -716,7 +716,7 @@ function ANNCrossValidation(topology::AbstractArray{<:Int,1},
                 # la ecuacón es a*(nfolds-1)/nfolds = validationRatio
                 # con lo cual a = validationRatio / ((nfolds-1)/nfolds) = validationRatio*nfolds / (nfolds-1)
                 
-                validationRatioforTraining = validationRatio * size(inputsTraining, 1) / size(inputs, 1) # validationRatio*(nfolds) / (nfolds-1)
+                validationRatioforTraining = validationRatio *  size(inputs, 1) / size(inputsTraining, 1) # validationRatio*(nfolds) / (nfolds-1)
                 indicesEntreno, indicesValidation = holdOut(size(inputsTraining, 1), validationRatioforTraining)
 
                 # Calculamos el dataset de training y validation, usando los índices del holdOut.
