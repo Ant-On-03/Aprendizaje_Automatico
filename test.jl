@@ -2,16 +2,13 @@ using FileIO;
 using DelimitedFiles;
 using Statistics;
 using Flux;
+using CSV;
 
 
 include("58002749S_35591688Q_58024091J.jl")
 
-
-dataset = readdlm("datasets/iris.data", ',')
-
-# Extraer los datos de entrada (features) y los objetivos (targets)
-inputs = convert(Matrix{Float64}, dataset[:, 1:4])  # Asegurar que los datos de entrada son de tipo Float64
-targets = convert(Vector{String}, dataset[:, 5])    # Asegurar que los objetivos son de tipo String
+dataset = CSV.read("datasets/breastcancer/wdbc.csv", ',')
+dataset = readdlm("datasets/breastcancer/wdbc.data", ',')
 
 
 modelHyperparameters1 = Dict(:C => 1, "kernel" => "rbf", "gamma" => 2);
