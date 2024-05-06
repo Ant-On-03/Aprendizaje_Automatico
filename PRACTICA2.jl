@@ -4,56 +4,17 @@ using Statistics;
 using Flux;
 using CSV;
 
+Random.seed!(123)
 
 include("58002749S_35591688Q_58024091J.jl")
 
-dataset = CSV.read("datasets/breastcancer/wdbc.csv", ',')
+#Cargamos la base de datos
 dataset = readdlm("datasets/breastcancer/wdbc.data", ',')
 
 
-modelHyperparameters1 = Dict(:C => 1, "kernel" => "rbf", "gamma" => 2);
-num_folds = 3  # Por ejemplo, usar validación cruzada con 5 folds
-crossValidationIndices = [0, 1, 5, 8, 2, 7, 9, 3, 4, 6]
-modelCrossValidation(:KNeighborsClassifier,modelHyperparameters1,inputs, targets, crossValidationIndices)
-################################################
-using Random
-using DelimitedFiles;
-using Statistics
-Random.seed!(123)
-
-dataset = readdlm("datasets/iris.data", ',');
-inputs = dataset[:, 1:4];
-inputs = Float32.(inputs);
-targets = dataset[:, 5];
- 
- 
- 
-modelHyperparameters = Dict("C" => 1, "kernel" => "rbf", "gamma" => 2, "degree" => 3, "coef0" =>0.0);
- 
-modelHyperparameters = Dict("max_depth" => 3);
- 
-modelHyperparameters = Dict("n_neighbors" => 3);
-
-modelHyperparameters = Dict("topology" => [5,3], "learningRate" => 0.01,"validationRatio" => 0.2, "numExecutions" => 50, "maxEpochs" => 1000,"maxEpochsVal" => 6);
- 
-crossValidationIndices = [2, 1, 2, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 3, 2, 3, 3, 2, 2, 3, 1, 3, 2, 3, 3, 3, 3, 3, 3, 3, 1, 1, 2, 2, 3, 2, 3, 2, 3, 2, 3, 2, 2, 2, 3, 3, 3, 3, 3, 2, 1, 3, 1, 1, 1, 1, 1, 1, 2, 2, 1, 1, 1, 1, 3, 1, 2, 2, 2, 2, 2, 2, 1, 3, 1, 3, 1, 1, 1, 1, 3, 2, 2, 1, 1, 2, 1, 1, 2, 2, 1, 1, 2, 3, 2, 3, 2, 2, 3, 2, 3, 3, 1, 3, 2, 2, 3, 3, 3, 3, 3, 2, 2, 3, 1, 1, 1, 2, 1, 3, 2, 2, 1, 3, 3, 1, 3, 2, 3, 3, 1, 2, 1, 3, 3, 2, 2, 2, 2, 3, 1, 2, 1, 1, 1, 2, 2, 3, 3, 3]
 
 
-ANNCrossValidation([10, 5, 3], inputs, targets, crossValidationIndices; validationRatio=0.2)
-modelCrossValidation(:KNeighborsClassifier, modelHyperparameters,inputs,targets,crossValidationIndices)
-
-
-
-
-
-confusionMatrix([true false false; false false true; false false false], [false false true; true false false; false false false])
-
-println(trainClassANN([3, 4, 2], ([1 2; 3 4; 5 6], [true false; false true; true false]), testDataset = ([1 2; 3 4; 5 6], [true false; false true; true false]), maxEpochs = 50))
-
-# Leer los datos y definir targets
-dataset = readdlm("iris.data", ',')
-inputs = dataset[:, 1:4]
-targets = dataset[:, 5]
+buildClassANN()
 
 # Llamar a la función oneHotEncoding con el vector y las clases
 oneHotEncoding(targets)
@@ -120,13 +81,6 @@ end;
 ############################################################################################
 ############################################################################################
 
-# Cargar el conjunto de datos Iris desde el archivo
-dataset = readdlm("iris.data", ',')
-
-# Extraer los inputs y targets
-inputs = convert(Array{Float64, 2}, dataset[:, 1:4])
-# Extraer los targets como cadenas de texto
-targets = convert(Vector{String}, dataset[:, 5])
 
 
 # Convertir las etiquetas de clase a números enteros
