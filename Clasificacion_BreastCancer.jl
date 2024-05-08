@@ -21,23 +21,24 @@ dataset
 include("58002749S_35591688Q_58024091J.jl")
 
 
+
+
 # --------------------------------- PREPARACIÓN DE LOS DATOS. --------------------------------- #
 inputs = convert(Matrix{Float64}, dataset[:, 3:32]);
 targets =  dataset[:, 2]
 
 # CONVERTIMOS CATEGÓRICAS A BOOLEANOS.
-targets = oneHotEncoding(targets, ["M", "B"]);
+targets = oneHotEncoding(targets, ["M", "B"])[:,1];
+
 
 # NORMALIZAMOS LAS VARIABLES CONTÍNUAS.
 # HAY QUE DECIDIR SI ES MEJOR ZEROMEAN O MINMAX. DE PRIMERAS MINMAX
-# normalizeZeroMean!(inputs)
-normalizeMinMax!(inputs)
+normalizeZeroMean!(inputs)
 
 mean(inputs[:,4])
 std(inputs[:,4])
 
-maximum(inputs[:,4])
-minimum(inputs[:,4])
+
 
 # ------------------------------------ CREACIÓN DE LOS MODELOS. ------------------------------------ #
 # EMPLEAREMOS CROSSVALIDATION CON VARIOS MODELOS DISTINTOS.
@@ -49,6 +50,14 @@ modelHyperparameters = Dict("topology" => [5,3], "learningRate" => 0.01,"validat
 
 
 ANN = modelCrossValidation(:ANN, modelHyperparameters, inputs, targets, indicesCross)
+
+
+
+
+
+# ------------------------------------ EVALUACIÓN DE LOS MODELOS. ------------------------------------ #
+
+# SVM Y ÁRBOLES DE DECISIÓN.
 
 
 
