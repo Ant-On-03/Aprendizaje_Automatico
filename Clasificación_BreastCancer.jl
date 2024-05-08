@@ -15,30 +15,43 @@ using ScikitLearn: @sk_import, fit!, predict
 @sk_import neighbors: KNeighborsClassifier
 
 
-# Importar los datos
-dataset = readdlm("wdbc.data", ',')
+# Importamos los datos
+dataset = readdlm("datasets/breastCancer/wdbc.data", ',')
 dataset
-include("funciones.jl")
+include("58002749S_35591688Q_58024091J.jl")
 
 
-# Separar los datos
-inputs = dataset[:, 3:30];
-targets = dataset[:, 2];
+# --------------------------------- PREPARACIÓN DE LOS DATOS. --------------------------------- #
+inputs = convert(Matrix{Float64}, dataset[:, 3:32]);
+targets =  dataset[:, 2]
 
-# Indices de crossvalidation
-indices = crossvalidation(targets, 10);
-
-# Convertir inputs a un formato adecuado para trabajar con ellos
-inputs2 = convert(Matrix{Float32}, inputs)
-
-# Aplicar oneHotEncoding sobre los targets
+# CONVERTIMOS CATEGÓRICAS A BOOLEANOS.
 targets = oneHotEncoding(targets, ["M", "B"]);
 
-# Normalizar los datos
-parametros = calculateZeroMeanNormalizationParameters(inputs2);
-normalizado = normalizeZeroMean(inputs2, parametros)
+# NORMALIZAMOS LAS VARIABLES CONTÍNUAS.
+# HAY QUE DECIDIR SI ES MEJOR ZEROMEAN O MINMAX. DE PRIMERAS MINMAX
+# normalizeZeroMean!(inputs)
+normalizeMinMax!(inputs)
 
-# Crear distintos modelos y comparar resultados
+mean(inputs[:,4])
+std(inputs[:,4])
+
+maximum(inputs[:,4])
+minimum(inputs[:,4])
+
+# ------------------------------------ CREACIÓN DE LOS MODELOS. ------------------------------------ #
+# EMPLEAREMOS CROSSVALIDATION CON VARIOS MODELOS DISTINTOS.
+# CREAMOS HYPERPARÁMETROS.
+
+indicesCross = crossvalidation(targets, 10) # creamos 10 k grupos en crossvalidation
+    # En esta parte toca probar con distintos valores para los hiperparámetros.
 modelHyperparameters = Dict("topology" => [5,3], "learningRate" => 0.01,"validationRatio" => 0.2, "numExecutions" => 50, "maxEpochs" => 1000,"maxEpochsVal" => 6);
 
-ANN = modelCrossValidation(:ANN, modelHyperparameters, inputs2, targets, indices)
+
+ANN = modelCrossValidation(:ANN, modelHyperparameters, inputs, targets, indicesCross)
+
+
+
+
+
+

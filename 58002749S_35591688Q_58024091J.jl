@@ -104,6 +104,7 @@ function normalizeMinMax(dataset::AbstractArray{<:Real,2})
 end
 
 
+
 # 4 versiones similares de la funcion para normalizar de media 0:
 #  - Nos dan los parametros de normalizacion, y se quiere modificar el array de entradas (el nombre de la funcion acaba en '!')
 function normalizeZeroMean!(dataset::AbstractArray{<:Real,2}, normalizationParameters::NTuple{2, AbstractArray{<:Real,2}})
